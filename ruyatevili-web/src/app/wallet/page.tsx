@@ -78,7 +78,7 @@ export default async function WalletPage() {
                 <p className="text-sm text-night-200 mb-4">
                   {pkg.token_count} rüya hakkı
                 </p>
-                <PurchaseButton packageId={pkg.id} featured={pkg.is_featured} />
+                <PurchaseButton shopierLink={pkg.shopier_link} featured={pkg.is_featured} />
               </div>
             );
           })}
@@ -86,10 +86,11 @@ export default async function WalletPage() {
 
         <div className="mt-6 p-4 rounded-lg bg-yellow-900/20 border border-yellow-700/30">
           <p className="text-yellow-200 text-sm">
-            <strong>⚠️ Bilgilendirme:</strong> Ödeme entegrasyonu henüz tamamlanmadı.
-            Token satın almak için lütfen iletişime geçin. Yakında Shopier üzerinden
-            otomatik ödeme aktif olacak.
-          </p>
+  <strong>💳 Ödeme Süreci:</strong> &quot;Satın Al&quot; butonuna bastığınızda
+  Shopier&apos;in güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz
+  tamamlandıktan sonra tokenleriniz <strong>maksimum 24 saat içinde</strong>
+  hesabınıza yüklenecektir. Acil durumlarda iletişime geçebilirsiniz.
+</p>
         </div>
       </div>
 
@@ -112,15 +113,34 @@ export default async function WalletPage() {
   );
 }
 
-function PurchaseButton({ packageId, featured }: { packageId: string; featured: boolean }) {
+function PurchaseButton({
+  shopierLink,
+  featured,
+}: {
+  shopierLink: string | null;
+  featured: boolean;
+}) {
+  if (!shopierLink) {
+    return (
+      <button
+        disabled
+        className={`${featured ? "btn-primary" : "btn-secondary"} w-full text-sm opacity-50 cursor-not-allowed`}
+        title="Ödeme linki henüz tanımlanmadı"
+      >
+        Yakında
+      </button>
+    );
+  }
+
   return (
-    <button
-      disabled
-      className={`${featured ? "btn-primary" : "btn-secondary"} w-full text-sm opacity-50 cursor-not-allowed`}
-      title="Ödeme sistemi henüz aktif değil"
+    <a
+      href={shopierLink}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={`${featured ? "btn-primary" : "btn-secondary"} w-full text-sm text-center block`}
     >
-      Yakında
-    </button>
+      Satın Al
+    </a>
   );
 }
 

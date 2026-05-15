@@ -36,13 +36,21 @@ export async function AuthenticatedHeader() {
           </Link>
 
           {profile?.is_admin && (
-            <Link
-              href="/admin/dreams"
-              className="px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
-            >
-              Yönetim
-            </Link>
-          )}
+  <>
+    <Link
+      href="/admin/dreams"
+      className="px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
+    >
+      Yönetim
+    </Link>
+    <Link
+      href="/admin/grant-tokens"
+      className="hidden sm:inline-flex px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
+    >
+      🪙 Token Ver
+    </Link>
+  </>
+)}
 
           <SignOutButton />
         </div>

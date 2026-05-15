@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { CountdownBanner } from "@/components/CountdownBanner";
+import { SiteStats } from "@/components/SiteStats";
 import type { Profile, Dream } from "@/lib/types/database";
 
 export default async function DashboardPage() {
@@ -29,17 +31,47 @@ export default async function DashboardPage() {
   const noTokens = tokenBalance < 1;
   const canSubmit = !quotaFull && !noTokens;
 
+  const firstName = profile?.full_name?.split(" ")[0] || "";
+  const hasNoDreams = !dreams || dreams.length === 0;
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
-      {/* Karşılama */}
+      {/* GERİ SAYIM BANNERI (her zaman göster - kampanya sürerken) */}
+      <CountdownBanner />
+
+      {/* KARŞILAMA */}
       <div>
         <h1 className="font-display text-3xl md:text-4xl text-night-50 mb-1">
-          Hoş geldiniz{profile?.full_name ? `, ${profile.full_name.split(" ")[0]}` : ""}
+          Hoş geldiniz{firstName ? `, ${firstName}` : ""}
         </h1>
         <p className="text-night-300">Rüya kontrol paneliniz</p>
       </div>
 
-      {/* Üst kartlar — Cüzdan + Kota */}
+      {/* SOSYAL KANIT (Sadece yeterli veri varsa) */}
+      <SiteStats />
+
+      {/* TOKEN=0 İSE ACİLİYET MESAJI ÖNE ÇIK */}
+      {noTokens && hasNoDreams && (
+        <div className="card-elevated border-gold-400/40 text-center py-8">
+          <p className="text-5xl mb-4">🌙</p>
+          <h2 className="font-display text-2xl text-night-50 mb-2">
+            İlk rüyanı yorumlatmaya hazırsın
+          </h2>
+          <p className="text-night-200 leading-relaxed mb-6 max-w-md mx-auto">
+            Açılışa özel <span className="text-gold-300 font-bold">%90 indirimle</span>{" "}
+            sadece <span className="text-gold-300 font-bold">50 ₺</span>&apos;ye başla.
+            Klasik tabir ilmiyle rüyanın mesajını öğren.
+          </p>
+          <Link href="/wallet" className="btn-primary text-lg px-8 py-4 inline-block">
+            🪙 Hemen Token Al
+          </Link>
+          <p className="text-xs text-night-400 mt-3">
+            Demlenmeye bırakılan rüyalar için tokeniniz iade edilir
+          </p>
+        </div>
+      )}
+
+      {/* CÜZDAN + KOTA KARTLARI */}
       <div className="grid md:grid-cols-2 gap-4">
         <div className="card-elevated">
           <div className="flex items-start justify-between mb-2">
@@ -49,7 +81,7 @@ export default async function DashboardPage() {
                 {tokenBalance}
               </p>
               <p className="text-sm text-night-200 mt-1">
-                {tokenBalance === 1 ? "Token" : "Token"} kullanılabilir
+                Token kullanılabilir
               </p>
             </div>
             <span className="text-3xl">🪙</span>
@@ -74,7 +106,6 @@ export default async function DashboardPage() {
             </div>
             <span className="text-3xl">📊</span>
           </div>
-          {/* Çubuk */}
           <div className="mt-4 h-2 bg-night-900 rounded-full overflow-hidden">
             <div
               className={`h-full transition-all duration-500 ${quotaFull ? "bg-red-500" : "bg-gold-400"}`}
@@ -84,12 +115,12 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Yeni Rüya Butonu */}
+      {/* YENİ RÜYA BUTONU */}
       <div className="card text-center py-8">
         {canSubmit ? (
           <>
             <p className="font-display text-xl text-gold-300 mb-2 italic">
-              "Detaylar silikleşmeden rüyanızı yazın!"
+              &quot;Detaylar silikleşmeden rüyanızı yazın!&quot;
             </p>
             <p className="text-night-200 mb-4">
               Uyandığınız o ilk saniye kalbinizde ne hissettiniz? Duygularınızı hemen aktarın.
@@ -102,18 +133,21 @@ export default async function DashboardPage() {
             </p>
           </>
         ) : noTokens ? (
-          <>
-            <p className="text-night-200 mb-4">
-              Rüya gönderebilmek için önce token satın almalısınız
-            </p>
-            <Link href="/wallet" className="btn-primary text-lg px-8 py-4">
-              🪙 Token Satın Al
-            </Link>
-          </>
+          // (Üstte zaten daha büyük bir aciliyet mesajı gösterdik, burada daha küçük)
+          !hasNoDreams && (
+            <>
+              <p className="text-night-200 mb-4">
+                Yeni rüya göndermek için token almalısınız
+              </p>
+              <Link href="/wallet" className="btn-primary text-lg px-8 py-4 inline-block">
+                🪙 Token Satın Al
+              </Link>
+            </>
+          )
         ) : (
           <>
             <p className="text-night-200 mb-4">
-              Rüya kotanız dolu. Mevcut rüyalarınız yanıtlanana kadar yeni rüya gönderemezsiniz.
+              Rüya kotanız dolu. Mevcut rüyalarınız yanıtlanana kadar bekleyin.
             </p>
             <button disabled className="btn-primary text-lg px-8 py-4 opacity-50 cursor-not-allowed">
               Kota Dolu
@@ -122,11 +156,11 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      {/* Rüya Kayıtları */}
+      {/* RÜYA KAYITLARI */}
       <div>
         <h2 className="font-display text-2xl text-night-50 mb-4">Rüya Kayıtlarım</h2>
 
-        {!dreams || dreams.length === 0 ? (
+        {hasNoDreams ? (
           <div className="card text-center py-12">
             <p className="text-4xl mb-3">🌙</p>
             <p className="text-night-200">Henüz rüya göndermediniz.</p>

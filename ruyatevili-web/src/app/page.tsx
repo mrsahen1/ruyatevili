@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import type { TokenPackage } from "@/lib/types/database";
+import { CountdownBanner } from "@/components/CountdownBanner";
 
 export default async function HomePage() {
   const supabase = await createClient();
@@ -30,8 +31,10 @@ export default async function HomePage() {
         </div>
       </nav>
 
-      {/* Açılış indirim banner'ı */}
-      <div className="container mx-auto px-6">
+      {/* Açılış indirim banner'ı - Geri sayımlı */}
+<div className="container mx-auto px-6 mb-8">
+  <CountdownBanner />
+</div>
         <div className="bg-gradient-to-r from-gold-500/20 via-gold-400/30 to-gold-500/20 border border-gold-400/40 rounded-2xl px-6 py-3 text-center mb-8">
           <p className="text-gold-100 font-medium">
             🎉 <span className="font-display text-lg">Açılışa Özel</span> · Tüm paketlerde

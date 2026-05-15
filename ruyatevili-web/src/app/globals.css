@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: #070d1a;
+  --color-bg-elevated: #0f1a2e;
+  --color-text: #e8eef7;
+  --color-text-muted: #9fb6d6;
+  --color-accent: #ebc967;
+}
+
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+}
+
+body {
+  min-height: 100vh;
+  background-image:
+    radial-gradient(1px 1px at 25% 15%, rgba(235, 201, 103, 0.4), transparent 50%),
+    radial-gradient(1px 1px at 60% 30%, rgba(255, 255, 255, 0.3), transparent 50%),
+    radial-gradient(2px 2px at 80% 60%, rgba(235, 201, 103, 0.3), transparent 50%),
+    radial-gradient(1px 1px at 10% 75%, rgba(255, 255, 255, 0.4), transparent 50%),
+    radial-gradient(1px 1px at 45% 85%, rgba(235, 201, 103, 0.3), transparent 50%),
+    linear-gradient(180deg, #070d1a 0%, #0f1a2e 60%, #1e2f4a 100%);
+  background-attachment: fixed;
+  background-size: 100% 100%;
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-gold-400 hover:bg-gold-300 text-night-950 font-medium rounded-lg transition-all duration-200 shadow-lg shadow-gold-400/20 hover:shadow-gold-400/40 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-gold-400;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center px-6 py-3 bg-night-700/50 hover:bg-night-700 text-night-50 font-medium rounded-lg border border-night-600 transition-all duration-200;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center px-4 py-2 text-night-200 hover:text-gold-300 transition-colors duration-200;
+  }
+
+  .card {
+    @apply bg-night-800/40 backdrop-blur-sm border border-night-700 rounded-xl p-6 shadow-xl;
+  }
+
+  .card-elevated {
+    @apply bg-night-800/60 backdrop-blur-md border border-gold-400/20 rounded-xl p-6 shadow-2xl;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-night-900/50 border border-night-700 rounded-lg text-night-50 placeholder:text-night-400 focus:outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 transition-all duration-200;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-night-200 mb-2;
+  }
+
+  .heading-display {
+    @apply font-display text-night-50;
+  }
+
+  .text-muted {
+    @apply text-night-300;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-green {
+    @apply badge bg-green-900/40 text-green-300 border border-green-700/30;
+  }
+
+  .badge-yellow {
+    @apply badge bg-yellow-900/40 text-yellow-300 border border-yellow-700/30;
+  }
+
+  .badge-gray {
+    @apply badge bg-night-700/50 text-night-300 border border-night-600;
+  }
+}
+
+/* Yumuşak scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Webkit scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: #0f1a2e;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #385785;
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #496fa0;
+}

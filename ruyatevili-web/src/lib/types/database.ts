@@ -26,6 +26,7 @@ export interface TokenPackage {
   is_featured: boolean;
   is_active: boolean;
   display_order: number;
+  shopier_link: string | null;
 }
 
 export interface Order {

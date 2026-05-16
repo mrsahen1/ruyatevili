@@ -171,3 +171,54 @@ html {
   animation: shimmer 3s ease-in-out infinite;
 }
 
+/* ============================================================ */
+/* DÖNEN IŞIK ŞERİDİ (Glowing Border) - 3 yerde kullanılıyor    */
+/* ============================================================ */
+
+.rotating-border-wrapper {
+  position: relative;
+  padding: 2px;
+  border-radius: 9999px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* Kare/yuvarlak köşeli kapsayıcılar için */
+.rotating-border-wrapper:has(.rotating-border-inner.rounded-lg),
+.rotating-border-wrapper:has(.rotating-border-inner.rounded-xl) {
+  border-radius: 14px;
+}
+
+.rotating-border-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  width: 200%;
+  height: 200%;
+  background: conic-gradient(
+    from 0deg,
+    transparent 0deg,
+    transparent 270deg,
+    #ebc967 320deg,
+    #fff5d6 350deg,
+    #ebc967 360deg
+  );
+  animation: rotateBorder 4s linear infinite;
+  z-index: -1;
+}
+
+.rotating-border-inner {
+  position: relative;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+/* Sertifika kutusu için biraz daha büyük köşe yarıçapı */
+.rotating-border-wrapper:has(.rotating-border-inner.p-2) {
+  border-radius: 14px;
+}
+
+@keyframes rotateBorder {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

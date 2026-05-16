@@ -58,8 +58,8 @@ export default async function DashboardPage() {
             İlk rüyanı yorumlatmaya hazırsın
           </h2>
           <p className="text-night-200 leading-relaxed mb-6 max-w-md mx-auto">
-            Açılışa özel <span className="text-gold-300 font-bold">%90 indirimle</span>{" "}
-            sadece <span className="text-gold-300 font-bold">50 ₺</span>&apos;ye başla.
+            Açılışa özel <span className="text-gold-300 font-bold">%30 indirimle</span>{" "}
+sadece <span className="text-gold-300 font-bold">350 ₺</span>&apos;ye başla.
             Klasik tabir ilmiyle rüyanın mesajını öğren.
           </p>
           <Link href="/wallet" className="btn-primary text-lg px-8 py-4 inline-block">

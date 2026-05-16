@@ -30,26 +30,32 @@ export default async function HomePage() {
       {/* PARLAYAN IŞIK GEÇİŞİ */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gold-400/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
 
-      {/* ÜST NAVIGASYON */}
-      <nav className="relative container mx-auto px-6 py-6 flex items-center justify-between z-10">
-        <Link href="/" className="flex items-center gap-3 group">
+            {/* ÜST NAVIGASYON */}
+      <nav className="relative container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between z-10 gap-2">
+        <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
           <Image
             src="/logo.png"
             alt="RUYATEVİLİ"
             width={44}
             height={44}
             priority
-            className="group-hover:rotate-12 transition-transform duration-500"
+            className="w-10 h-10 sm:w-11 sm:h-11 group-hover:rotate-12 transition-transform duration-500 flex-shrink-0"
           />
-          <span className="font-display text-xl text-night-50 tracking-widest uppercase">
+          <span className="hidden sm:inline font-display text-xl text-night-50 tracking-widest uppercase">
             ruyatevili
           </span>
         </Link>
-        <div className="flex items-center gap-2">
-          <Link href="/auth/login" className="btn-ghost">
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Link
+            href="/auth/login"
+            className="px-3 py-2 sm:px-4 sm:py-2 bg-night-800/60 hover:bg-night-700/60 border border-night-600 text-night-50 text-sm font-medium rounded-lg transition-all"
+          >
             Giriş
           </Link>
-          <Link href="/auth/register" className="btn-secondary">
+          <Link
+            href="/auth/register"
+            className="px-3 py-2 sm:px-4 sm:py-2 bg-gold-400 hover:bg-gold-300 text-night-950 text-sm font-medium rounded-lg shadow-lg shadow-gold-400/20 transition-all"
+          >
             Kayıt Ol
           </Link>
         </div>

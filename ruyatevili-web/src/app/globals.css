@@ -104,3 +104,70 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: #496fa0;
 }
+
+/* ============================================================ */
+/* ANA SAYFA CEZBEDİCİ ANİMASYONLAR (en alta eklendi)            */
+/* ============================================================ */
+
+/* Hareketli yıldızlar */
+.star {
+  position: absolute;
+  background: #ebc967;
+  border-radius: 50%;
+  opacity: 0;
+  animation: starTwinkle 4s ease-in-out infinite;
+}
+
+.star-1 { top: 10%; left: 5%; width: 3px; height: 3px; animation-delay: 0s; }
+.star-2 { top: 20%; left: 80%; width: 2px; height: 2px; animation-delay: 0.5s; }
+.star-3 { top: 35%; left: 15%; width: 2px; height: 2px; animation-delay: 1s; }
+.star-4 { top: 50%; left: 90%; width: 3px; height: 3px; animation-delay: 1.5s; }
+.star-5 { top: 65%; left: 25%; width: 2px; height: 2px; animation-delay: 2s; }
+.star-6 { top: 75%; left: 70%; width: 3px; height: 3px; animation-delay: 2.5s; }
+.star-7 { top: 85%; left: 10%; width: 2px; height: 2px; animation-delay: 3s; }
+.star-8 { top: 15%; left: 50%; width: 2px; height: 2px; animation-delay: 3.5s; }
+
+@keyframes starTwinkle {
+  0%, 100% {
+    opacity: 0;
+    transform: scale(0.5);
+    box-shadow: 0 0 2px #ebc967;
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.5);
+    box-shadow: 0 0 12px #ebc967, 0 0 24px #ebc96780;
+  }
+}
+
+/* Yavaş nabız (banner için) */
+@keyframes pulseSlow {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+.animate-pulse-slow {
+  animation: pulseSlow 3s ease-in-out infinite;
+}
+
+/* Süzülen hilal */
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(5deg); }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+/* Akan ışık çizgisi (başlık altı) */
+@keyframes shimmer {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 1; }
+  100% { transform: translateX(100%); opacity: 0; }
+}
+
+.animate-shimmer {
+  animation: shimmer 3s ease-in-out infinite;
+}
+

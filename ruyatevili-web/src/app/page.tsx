@@ -67,9 +67,14 @@ export default async function HomePage() {
           <div className="text-9xl text-gold-400/10 animate-float">☾</div>
         </div>
 
-        <div className="inline-flex items-center gap-2 px-4 py-2 mb-8 rounded-full bg-night-800/50 border border-gold-400/30 text-gold-300 text-sm backdrop-blur-sm shadow-lg shadow-gold-400/10">
-          <span className="w-2 h-2 rounded-full bg-gold-400 animate-twinkle"></span>
-          Geleneksel Tevil İlmi · Sertifikalı Yorumcu
+        {/* SERTİFİKA ROZETİ — DÖNEN IŞIK ŞERİDİYLE */}
+        <div className="rotating-border-wrapper inline-block mb-8">
+          <div className="rotating-border-inner px-6 py-2 bg-night-900 rounded-full">
+            <span className="inline-flex items-center gap-2 text-gold-300 text-sm">
+              <span className="w-2 h-2 rounded-full bg-gold-400 animate-twinkle"></span>
+              Geleneksel Tevil İlmi · Sertifikalı Yorumcu
+            </span>
+          </div>
         </div>
 
         <h1 className="font-display text-5xl md:text-7xl font-light text-night-50 mb-6 max-w-4xl mx-auto leading-tight relative">
@@ -87,14 +92,18 @@ export default async function HomePage() {
           kalbinizin pusulasını beraber bulalım.
         </p>
 
+        {/* CTA BUTONLARI — DÖNEN IŞIK ŞERİDİYLE SARILI */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <Link
-            href="/auth/register"
-            className="btn-primary text-lg px-8 py-4 relative group overflow-hidden"
-          >
-            <span className="relative z-10">Hemen Başla</span>
-            <span className="absolute inset-0 bg-gradient-to-r from-gold-300 to-gold-500 opacity-0 group-hover:opacity-100 transition-opacity"></span>
-          </Link>
+          <div className="rotating-border-wrapper">
+            <div className="rotating-border-inner bg-night-950 rounded-lg">
+              <Link
+                href="/auth/register"
+                className="btn-primary text-lg px-8 py-4 block"
+              >
+                Hemen Başla
+              </Link>
+            </div>
+          </div>
           <Link href="#nasil-calisir" className="btn-ghost">
             Nasıl Çalışır? ↓
           </Link>
@@ -108,15 +117,17 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* KANCA MESAJ - PARLAK */}
+      {/* KANCA MESAJ — DÖNEN IŞIK ŞERİDİYLE */}
       <section className="relative container mx-auto px-6 py-12 z-10">
-        <div className="card-elevated max-w-3xl mx-auto text-center relative overflow-hidden group">
-          <div className="absolute -top-20 -left-20 w-40 h-40 bg-gold-400/10 rounded-full blur-3xl group-hover:bg-gold-400/20 transition-all duration-700"></div>
-          <div className="absolute -bottom-20 -right-20 w-40 h-40 bg-gold-400/10 rounded-full blur-3xl group-hover:bg-gold-400/20 transition-all duration-700"></div>
-          <p className="font-display text-2xl md:text-3xl text-night-50 leading-relaxed italic relative">
-            &quot;Her rüya size özel bir mesaj taşır. Hayatınızda cevabını aradığınız büyük
-            soruların şifresi belki de son rüyanızda gizlidir.&quot;
-          </p>
+        <div className="rotating-border-wrapper max-w-3xl mx-auto">
+          <div className="rotating-border-inner bg-night-900 rounded-xl">
+            <div className="card-elevated !bg-transparent !border-0 text-center !rounded-xl">
+              <p className="font-display text-2xl md:text-3xl text-night-50 leading-relaxed italic">
+                &quot;Her rüya size özel bir mesaj taşır. Hayatınızda cevabını aradığınız büyük
+                soruların şifresi belki de son rüyanızda gizlidir.&quot;
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -135,13 +146,13 @@ export default async function HomePage() {
               num: "01",
               icon: "🪙",
               title: "Token Al",
-              desc: "İhtiyacınıza uygun paketi seçin. Açılışa özel %90 indirim aktif.",
+              desc: "İhtiyacınıza uygun paketi seçin. Açılışa özel %30 indirim aktif.",
             },
             {
               num: "02",
               icon: "✍️",
               title: "Rüyanı Yaz",
-              desc: "5 bölümlük detaylı anamnez formuyla rüyanızı paylaşın. Adım adım yönlendiriyoruz.",
+              desc: "Detaylı anamnez formuyla rüyanızı paylaşın. Adım adım yönlendiriyoruz.",
             },
             {
               num: "03",
@@ -149,13 +160,11 @@ export default async function HomePage() {
               title: "Bildirim Bekle",
               desc: "Yorumunuz hazır olduğunda veya rüyanız demlenmeye bırakıldığında haberdar olun.",
             },
-          ].map((step, idx) => (
+          ].map((step) => (
             <div
               key={step.num}
               className="card hover:border-gold-400/60 transition-all duration-500 group relative overflow-hidden"
-              style={{ animationDelay: `${idx * 100}ms` }}
             >
-              {/* hover ışığı */}
               <div className="absolute inset-0 bg-gradient-to-br from-gold-400/0 via-gold-400/0 to-gold-400/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
 
               <div className="relative">
@@ -179,7 +188,7 @@ export default async function HomePage() {
       <section id="paketler" className="relative container mx-auto px-6 py-20 z-10">
         <div className="text-center mb-4">
           <span className="inline-block px-4 py-1 rounded-full bg-gold-400/20 text-gold-300 text-sm font-medium mb-4 animate-pulse-slow">
-            🎉 Açılışa Özel %90 İndirim
+            🎉 Açılışa Özel %30 İndirim
           </span>
         </div>
         <h2 className="font-display text-4xl md:text-5xl text-center text-night-50 mb-4">
@@ -191,7 +200,8 @@ export default async function HomePage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {packages?.map((pkg: TokenPackage) => {
-            const originalPrice = Number(pkg.price_try) * 10;
+            // %30 indirim için: indirimli fiyat / 0.7 = orijinal fiyat
+            const originalPrice = Math.round(Number(pkg.price_try) / 0.7);
             return (
               <div
                 key={pkg.id}
@@ -202,7 +212,6 @@ export default async function HomePage() {
                     <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gold-400 text-night-950 text-xs font-medium rounded-full animate-pulse-slow">
                       En Avantajlı
                     </div>
-                    {/* parlama */}
                     <div className="absolute inset-0 rounded-xl bg-gradient-to-tr from-gold-400/0 via-gold-400/10 to-gold-400/0 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none"></div>
                   </>
                 )}
@@ -216,7 +225,7 @@ export default async function HomePage() {
                       {Number(pkg.price_try).toLocaleString("tr-TR")}
                     </span>
                     <span className="text-night-300 ml-1">₺</span>
-                    <p className="text-xs text-gold-400 mt-1 font-medium">%90 İNDİRİM</p>
+                    <p className="text-xs text-gold-400 mt-1 font-medium">%30 İNDİRİM</p>
                   </div>
                   <p className="text-sm text-night-200 mb-6">
                     {pkg.token_count} rüya yorumu hakkı
@@ -250,8 +259,24 @@ export default async function HomePage() {
               klasik tevil ilminin dilidir. Her rüya, geleneksel kaynaklar ışığında ve
               kişisel hayatınızla bağı kurularak özenle yorumlanır.
             </p>
-            <p className="text-sm text-night-300">
+            <p className="text-sm text-night-300 mb-8">
               &quot;Rüya ve Ta&apos;bir/Te&apos;vil İlmi&quot; eğitim sertifikası mevcuttur.
+            </p>
+
+            {/* SERTİFİKA - DÖNEN IŞIK ŞERİDİYLE */}
+            <div className="rotating-border-wrapper inline-block">
+              <div className="rotating-border-inner bg-night-900 rounded-xl p-2">
+                <Image
+                  src="/certificate.jpg"
+                  alt="Rüya Ta'bir ve Te'vil İlmi Eğitim Sertifikası"
+                  width={600}
+                  height={420}
+                  className="rounded-lg max-w-full h-auto"
+                />
+              </div>
+            </div>
+            <p className="text-xs text-night-400 mt-4">
+              Erdem Akça hocadan alınmış &quot;Rüya Ta&apos;bir ve Te&apos;vil İlmi&quot; katılım belgesi
             </p>
           </div>
         </div>

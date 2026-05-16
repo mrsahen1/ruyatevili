@@ -44,7 +44,7 @@ export default async function WalletPage() {
       <div className="bg-gradient-to-r from-gold-500/20 via-gold-400/30 to-gold-500/20 border border-gold-400/40 rounded-2xl px-6 py-3 text-center">
         <p className="text-gold-100">
           🎉 <span className="font-display text-lg">Açılışa Özel</span> · Tüm paketlerde
-          <span className="text-gold-300 font-bold mx-1">%90 İNDİRİM</span>
+          <span className="text-gold-300 font-bold mx-1">%30 İNDİRİM</span>
         </p>
       </div>
 
@@ -53,7 +53,7 @@ export default async function WalletPage() {
         <h2 className="font-display text-2xl text-night-50 mb-4">Token Paketleri</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {packages?.map((pkg: TokenPackage) => {
-            const originalPrice = Number(pkg.price_try) * 10;
+            const originalPrice = Math.round(Number(pkg.price_try) / 0.7);
             return (
               <div
                 key={pkg.id}
@@ -73,7 +73,7 @@ export default async function WalletPage() {
                     {Number(pkg.price_try).toLocaleString("tr-TR")}
                   </span>
                   <span className="text-night-300 ml-1">₺</span>
-                  <p className="text-xs text-gold-400 mt-1 font-medium">%90 İNDİRİM</p>
+                  <p className="text-xs text-gold-400 mt-1 font-medium">%30 İNDİRİM</p>
                 </div>
                 <p className="text-sm text-night-200 mb-4">
                   {pkg.token_count} rüya hakkı
@@ -86,11 +86,11 @@ export default async function WalletPage() {
 
         <div className="mt-6 p-4 rounded-lg bg-yellow-900/20 border border-yellow-700/30">
           <p className="text-yellow-200 text-sm">
-  <strong>💳 Ödeme Süreci:</strong> &quot;Satın Al&quot; butonuna bastığınızda
-  Shopier&apos;in güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz
-  tamamlandıktan sonra tokenleriniz <strong>maksimum 24 saat içinde</strong>
-  hesabınıza yüklenecektir. Acil durumlarda iletişime geçebilirsiniz.
-</p>
+            <strong>💳 Ödeme Süreci:</strong> &quot;Satın Al&quot; butonuna bastığınızda
+            Shopier&apos;in güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz
+            tamamlandıktan sonra tokenleriniz <strong>maksimum 24 saat içinde</strong>
+            hesabınıza yüklenecektir. Acil durumlarda iletişime geçebilirsiniz.
+          </p>
         </div>
       </div>
 

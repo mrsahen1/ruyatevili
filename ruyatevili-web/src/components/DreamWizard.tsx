@@ -6,44 +6,57 @@ import { createClient } from "@/lib/supabase/client";
 import type { DreamFormData } from "@/lib/types/database";
 
 const STEPS = [
-  { num: 1, title: "Profil", desc: "Kimlik ve maneviyat" },
-  { num: 2, title: "Günlük Yaşantı", desc: "Bilinçaltı taraması" },
-  { num: 3, title: "Teknik Koordinatlar", desc: "Uyku ortamı ve zamanlama" },
-  { num: 4, title: "Sahne Analizi", desc: "Rüyanın dokusu" },
-  { num: 5, title: "Kalp Pusulası", desc: "Uyanış ve hissiyat" },
+  { num: 1, title: "Zemin ve Koordinatlar", desc: "Uyku öncesi ve vakit" },
+  { num: 2, title: "Sahne ve Kalp Pusulası", desc: "Atmosfer ve uyanış" },
+  { num: 3, title: "Rüyanın Metni", desc: "Hikayeyi sansürsüzce aktarın" },
 ];
 
-export function DreamWizard() {
+interface Props {
+  hasTokens: boolean; // Token bakiyesi var mı (Analize Gönder butonu için)
+  quotaFull: boolean; // Kotası dolu mu (Analize Gönder kilitli olur)
+}
+
+export function DreamWizard({ hasTokens, quotaFull }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Form state — tüm bölümler tek bir state'te
-  const [data, setData] = useState<Partial<DreamFormData>>({
-    schema_version: "1.0",
-    section1_profile: {
-      age: 25,
-      gender: "erkek",
-      marital_status: "bekar",
-      occupation: "",
+  const [data, setData] = useState<DreamFormData>({
+    schema_version: "2.0",
+    step1_ground: {},
+    step2_scene: {
+      first_emotion: "huzur",
     },
-    section2_daily_life: { health_state: {} },
-    section3_timing: { sleep_position: {}, special_intention: { type: "yok" } },
-    section4_content: { dream_narrative: "" },
-    section5_feelings: { first_emotion: "huzur" },
+    step3_text: {
+      dream_narrative: "",
+    },
   });
 
-  function update<K extends keyof DreamFormData>(section: K, patch: Partial<DreamFormData[K]>) {
+  function updateStep1(patch: Partial<DreamFormData["step1_ground"]>) {
     setData((prev) => ({
       ...prev,
-      [section]: { ...(prev[section] as object), ...patch },
+      step1_ground: { ...prev.step1_ground, ...patch },
+    }));
+  }
+
+  function updateStep2(patch: Partial<DreamFormData["step2_scene"]>) {
+    setData((prev) => ({
+      ...prev,
+      step2_scene: { ...prev.step2_scene, ...patch },
+    }));
+  }
+
+  function updateStep3(patch: Partial<DreamFormData["step3_text"]>) {
+    setData((prev) => ({
+      ...prev,
+      step3_text: { ...prev.step3_text, ...patch },
     }));
   }
 
   function next() {
     setError(null);
-    if (step < 5) setStep(step + 1);
+    if (step < 3) setStep(step + 1);
   }
 
   function prev() {
@@ -51,18 +64,26 @@ export function DreamWizard() {
     if (step > 1) setStep(step - 1);
   }
 
-  async function submit() {
-    // Validasyon
-    if (!data.section1_profile?.occupation) {
-      setError("Mesleğinizi belirtmelisiniz");
-      setStep(1);
-      return;
-    }
-    const narrative = data.section4_content?.dream_narrative?.trim() ?? "";
+  // İki farklı submit:
+  // 1. saveToJournal: status='journal' - token harcamaz
+  // 2. submitForAnalysis: status='submitted' - 1 token harcar
+  async function handleSubmit(asAnalysis: boolean) {
+    const narrative = data.step3_text.dream_narrative.trim();
     if (narrative.length < 50) {
       setError("Rüyanızı en az 50 karakter olarak anlatmalısınız");
-      setStep(4);
+      setStep(3);
       return;
+    }
+
+    if (asAnalysis) {
+      if (!hasTokens) {
+        setError("Yetersiz token bakiyesi. Önce token satın alın veya günlüğe kaydedin.");
+        return;
+      }
+      if (quotaFull) {
+        setError("Rüya kotanız dolu. Günlüğe kaydedebilir veya mevcut analizlerinizi bekleyebilirsiniz.");
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -77,11 +98,10 @@ export function DreamWizard() {
         user_id: user.id,
         form_data: data,
         dream_text: narrative,
-        status: "submitted",
+        status: asAnalysis ? "submitted" : "journal",
       });
 
       if (insertError) {
-        // Trigger hatalarını yakala
         if (insertError.message.includes("Yetersiz token")) {
           throw new Error("Token bakiyeniz yetersiz");
         }
@@ -91,11 +111,15 @@ export function DreamWizard() {
         throw insertError;
       }
 
-      // Başarılı — dashboard'a yönlendir
-      router.push("/dashboard?submitted=1");
+      // Başarılı - günlüğe veya dashboard'a yönlendir
+      if (asAnalysis) {
+        router.push("/dashboard?submitted=1");
+      } else {
+        router.push("/dream/journal?saved=1");
+      }
       router.refresh();
     } catch (e: any) {
-      setError(e.message || "Rüya gönderilemedi. Lütfen tekrar deneyin.");
+      setError(e.message || "Rüya kaydedilemedi. Lütfen tekrar deneyin.");
       setSubmitting(false);
     }
   }
@@ -106,7 +130,7 @@ export function DreamWizard() {
       <div className="mb-8">
         <div className="flex items-center justify-between mb-2">
           <h1 className="font-display text-2xl text-night-50">Yeni Rüya</h1>
-          <span className="text-sm text-night-300">Adım {step} / 5</span>
+          <span className="text-sm text-night-300">Adım {step} / 3</span>
         </div>
         <div className="flex gap-2">
           {STEPS.map((s) => (
@@ -125,11 +149,9 @@ export function DreamWizard() {
       </div>
 
       <div className="card animate-fade-in">
-        {step === 1 && <Section1 data={data} update={update} />}
-        {step === 2 && <Section2 data={data} update={update} />}
-        {step === 3 && <Section3 data={data} update={update} />}
-        {step === 4 && <Section4 data={data} update={update} />}
-        {step === 5 && <Section5 data={data} update={update} />}
+        {step === 1 && <Step1 data={data} update={updateStep1} />}
+        {step === 2 && <Step2 data={data} update={updateStep2} />}
+        {step === 3 && <Step3 data={data} update={updateStep3} />}
       </div>
 
       {error && (
@@ -138,7 +160,8 @@ export function DreamWizard() {
         </div>
       )}
 
-      <div className="flex justify-between mt-6">
+      {/* Navigasyon */}
+      <div className="flex justify-between mt-6 gap-3 flex-wrap">
         {step > 1 ? (
           <button onClick={prev} className="btn-secondary" disabled={submitting}>
             ← Geri
@@ -147,331 +170,49 @@ export function DreamWizard() {
           <div />
         )}
 
-        {step < 5 ? (
+        {step < 3 ? (
           <button onClick={next} className="btn-primary">
             İleri →
           </button>
         ) : (
-          <button onClick={submit} className="btn-primary" disabled={submitting}>
-            {submitting ? "Gönderiliyor..." : "🌙 Rüyayı Gönder (1 Token)"}
-          </button>
+          // Son adımda iki buton: Günlüğe Kaydet + Analize Gönder
+          <div className="flex gap-3 flex-wrap">
+            <button
+              onClick={() => handleSubmit(false)}
+              className="btn-secondary"
+              disabled={submitting}
+              title="Token harcanmaz, askıya alınır"
+            >
+              {submitting ? "Kaydediliyor..." : "📓 Günlüğe Kaydet"}
+            </button>
+            <button
+              onClick={() => handleSubmit(true)}
+              className="btn-primary"
+              disabled={submitting || !hasTokens || quotaFull}
+              title={
+                !hasTokens
+                  ? "Token bakiyeniz yok"
+                  : quotaFull
+                    ? "Rüya kotanız dolu"
+                    : "1 token harcanır"
+              }
+            >
+              {submitting ? "Gönderiliyor..." : "🕊️ Analize Gönder (1 Token)"}
+            </button>
+          </div>
         )}
       </div>
-    </div>
-  );
-}
 
-// ============================================================
-// BÖLÜM 1: PROFIL
-// ============================================================
-function Section1({ data, update }: { data: any; update: any }) {
-  const p = data.section1_profile;
-  return (
-    <div className="space-y-4">
-      <h2 className="font-display text-xl text-night-50 mb-4">Kimlik ve Maneviyat</h2>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="label">Yaşınız *</label>
-          <input
-            type="number" min={10} max={120} required
-            value={p.age}
-            onChange={(e) => update("section1_profile", { age: parseInt(e.target.value) || 0 })}
-            className="input-field"
-          />
-        </div>
-        <div>
-          <label className="label">Cinsiyet *</label>
-          <select
-            value={p.gender}
-            onChange={(e) => update("section1_profile", { gender: e.target.value })}
-            className="input-field"
-          >
-            <option value="erkek">Erkek</option>
-            <option value="kadin">Kadın</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="label">Medeni Durum *</label>
-        <select
-          value={p.marital_status}
-          onChange={(e) => update("section1_profile", { marital_status: e.target.value })}
-          className="input-field"
-        >
-          <option value="bekar">Bekar</option>
-          <option value="evli">Evli</option>
-          <option value="dul">Dul</option>
-          <option value="bosanmis">Boşanmış</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="label">Meslek / Meşguliyet *</label>
-        <input
-          type="text" required
-          value={p.occupation}
-          onChange={(e) => update("section1_profile", { occupation: e.target.value })}
-          placeholder="Mühendis, öğretmen, öğrenci..."
-          className="input-field"
-        />
-      </div>
-
-      <div>
-        <label className="label">Zihninizi en çok ne meşgul ediyor?</label>
-        <textarea rows={2}
-          value={p.mental_focus || ""}
-          onChange={(e) => update("section1_profile", { mental_focus: e.target.value })}
-          placeholder="Hayatınızdaki ana mesele veya odak noktanız..."
-          className="input-field"
-        />
-      </div>
-
-      <hr className="border-night-700 my-6" />
-      <h3 className="font-display text-lg text-gold-300 mb-3">Manevi Durum</h3>
-
-      <div>
-        <label className="label">İbadetleriniz ne durumda?</label>
-        <select
-          value={p.spiritual_state?.worship_regularity || ""}
-          onChange={(e) =>
-            update("section1_profile", {
-              spiritual_state: { ...p.spiritual_state, worship_regularity: e.target.value },
-            })
-          }
-          className="input-field"
-        >
-          <option value="">Belirtmek istemiyorum</option>
-          <option value="duzenli">Düzenli</option>
-          <option value="gevsek">Gevşek</option>
-          <option value="arayista">Arayışta</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="label">
-          Son günlerde vicdanen rahatsız olduğunuz bir günah veya hata var mı?
-          <span className="text-night-400 text-xs ml-2">(Opsiyonel, mahrem kalır)</span>
-        </label>
-        <textarea rows={2}
-          value={p.spiritual_state?.recent_sin_or_regret || ""}
-          onChange={(e) =>
-            update("section1_profile", {
-              spiritual_state: { ...p.spiritual_state, recent_sin_or_regret: e.target.value },
-            })
-          }
-          className="input-field"
-        />
-      </div>
-
-      <div>
-        <label className="label">
-          Son günlerde içinizi ferahlatan bir hayır veya dua var mı?
-        </label>
-        <textarea rows={2}
-          value={p.spiritual_state?.recent_good_deed_or_prayer || ""}
-          onChange={(e) =>
-            update("section1_profile", {
-              spiritual_state: { ...p.spiritual_state, recent_good_deed_or_prayer: e.target.value },
-            })
-          }
-          className="input-field"
-        />
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// BÖLÜM 2: GÜNLÜK YAŞANTI
-// ============================================================
-function Section2({ data, update }: { data: any; update: any }) {
-  const d = data.section2_daily_life;
-  return (
-    <div className="space-y-4">
-      <h2 className="font-display text-xl text-night-50 mb-4">Günlük Yaşantı ve Bilinçaltı</h2>
-
-      <div>
-        <label className="label">Gündüz Kalıntısı</label>
-        <p className="text-xs text-night-400 mb-2">
-          Rüyayı gördüğünüz gün/öncesi bu konularda konuşma yaptınız mı, izlediniz mi?
-        </p>
-        <textarea rows={2}
-          value={d.day_residue || ""}
-          onChange={(e) => update("section2_daily_life", { day_residue: e.target.value })}
-          className="input-field"
-        />
-      </div>
-
-      <div>
-        <label className="label">Cevabını aradığınız büyük bir soru veya dileğiniz var mı?</label>
-        <textarea rows={2}
-          value={d.current_question_or_wish || ""}
-          onChange={(e) => update("section2_daily_life", { current_question_or_wish: e.target.value })}
-          className="input-field"
-        />
-      </div>
-
-      <hr className="border-night-700 my-6" />
-      <h3 className="font-display text-lg text-gold-300 mb-3">Sağlık ve Beslenme</h3>
-      <p className="text-xs text-night-400 mb-4">
-        Rüyayı gördüğünüz gece durumunuz nasıldı?
-      </p>
-
-      <div className="grid grid-cols-2 gap-3">
-        {[
-          { key: "was_tired", label: "Çok yorgundum" },
-          { key: "was_sick", label: "Hastaydım" },
-          { key: "was_stressed", label: "Stresliydim" },
-          { key: "heavy_meal_before_sleep", label: "Ağır yemek yedim" },
-        ].map((item) => (
-          <label
-            key={item.key}
-            className="flex items-center gap-2 p-3 rounded-lg bg-night-900/40 border border-night-700 cursor-pointer hover:border-gold-400/40"
-          >
-            <input
-              type="checkbox"
-              checked={d.health_state?.[item.key] || false}
-              onChange={(e) =>
-                update("section2_daily_life", {
-                  health_state: { ...d.health_state, [item.key]: e.target.checked },
-                })
-              }
-              className="w-4 h-4 accent-gold-400"
-            />
-            <span className="text-night-100 text-sm">{item.label}</span>
-          </label>
-        ))}
-      </div>
-
-      <div>
-        <label className="label">Düzenli kullandığınız ilaç var mı?</label>
-        <input type="text"
-          value={d.health_state?.current_medication || ""}
-          onChange={(e) =>
-            update("section2_daily_life", {
-              health_state: { ...d.health_state, current_medication: e.target.value },
-            })
-          }
-          placeholder="Yok / ilaç adı"
-          className="input-field"
-        />
-      </div>
-    </div>
-  );
-}
-
-// ============================================================
-// BÖLÜM 3: TEKNİK KOORDİNATLAR
-// ============================================================
-function Section3({ data, update }: { data: any; update: any }) {
-  const t = data.section3_timing;
-  return (
-    <div className="space-y-4">
-      <h2 className="font-display text-xl text-night-50 mb-4">Uyku Ortamı ve Zamanlama</h2>
-
-      <div>
-        <label className="label">Rüyayı ne zaman gördünüz?</label>
-        <select
-          value={t.dream_time || ""}
-          onChange={(e) => update("section3_timing", { dream_time: e.target.value })}
-          className="input-field"
-        >
-          <option value="">Seçiniz</option>
-          <option value="gece_ilk_yarisi">Gecenin ilk yarısı</option>
-          <option value="teheccud">Teheccüd vakti (gecenin son üçte biri)</option>
-          <option value="sabah_ezanina_yakin">Sabah ezanına yakın</option>
-          <option value="kaylule">Gündüz uykusu (Kaylule)</option>
-          <option value="bilmiyorum">Bilmiyorum</option>
-        </select>
-      </div>
-
-      <hr className="border-night-700 my-6" />
-      <h3 className="font-display text-lg text-gold-300 mb-3">Yatış Şekli</h3>
-
-      <div className="grid grid-cols-2 gap-3">
-        <label className="flex items-center gap-2 p-3 rounded-lg bg-night-900/40 border border-night-700 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={t.sleep_position?.had_ablution || false}
-            onChange={(e) =>
-              update("section3_timing", {
-                sleep_position: { ...t.sleep_position, had_ablution: e.target.checked },
-              })
-            }
-            className="w-4 h-4 accent-gold-400"
-          />
-          <span className="text-night-100 text-sm">Abdestliydim</span>
-        </label>
-        <label className="flex items-center gap-2 p-3 rounded-lg bg-night-900/40 border border-night-700 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={t.sleep_position?.prayed_before_sleep || false}
-            onChange={(e) =>
-              update("section3_timing", {
-                sleep_position: { ...t.sleep_position, prayed_before_sleep: e.target.checked },
-              })
-            }
-            className="w-4 h-4 accent-gold-400"
-          />
-          <span className="text-night-100 text-sm">Dua ederek yattım</span>
-        </label>
-      </div>
-
-      <div>
-        <label className="label">Hangi tarafa yattınız?</label>
-        <select
-          value={t.sleep_position?.body_position || ""}
-          onChange={(e) =>
-            update("section3_timing", {
-              sleep_position: { ...t.sleep_position, body_position: e.target.value },
-            })
-          }
-          className="input-field"
-        >
-          <option value="">Seçiniz</option>
-          <option value="sag">Sağ tarafıma</option>
-          <option value="sol">Sol tarafıma</option>
-          <option value="sirtustu">Sırtüstü</option>
-          <option value="yuzustu">Yüzüstü</option>
-          <option value="hatirlamiyorum">Hatırlamıyorum</option>
-        </select>
-      </div>
-
-      <hr className="border-night-700 my-6" />
-      <h3 className="font-display text-lg text-gold-300 mb-3">Özel Niyet</h3>
-
-      <div>
-        <label className="label">Bu rüya özel bir niyetle mi görüldü?</label>
-        <select
-          value={t.special_intention?.type || "yok"}
-          onChange={(e) =>
-            update("section3_timing", {
-              special_intention: { ...t.special_intention, type: e.target.value },
-            })
-          }
-          className="input-field"
-        >
-          <option value="yok">Normal bir uyku idi</option>
-          <option value="istihare">İstihare yaptım</option>
-          <option value="hacet">Hacet niyetiyle yattım</option>
-          <option value="yakaza">Yakaza halinde gördüm</option>
-        </select>
-      </div>
-
-      {t.special_intention?.type !== "yok" && (
-        <div>
-          <label className="label">Niyetinizi açıklayınız</label>
-          <textarea rows={2}
-            value={t.special_intention?.intention_text || ""}
-            onChange={(e) =>
-              update("section3_timing", {
-                special_intention: { ...t.special_intention, intention_text: e.target.value },
-              })
-            }
-            className="input-field"
-          />
+      {/* Bilgi notu son adımda */}
+      {step === 3 && (
+        <div className="mt-4 p-4 rounded-lg bg-night-800/40 border border-night-700">
+          <p className="text-xs text-night-300 leading-relaxed">
+            <strong className="text-gold-300">📓 Günlüğe Kaydet:</strong> Rüyanız askıda
+            bekletilir, dilediğiniz zaman analize gönderebilirsiniz. Token harcanmaz.
+            <br />
+            <strong className="text-gold-300">🕊️ Analize Gönder:</strong> Rüyanız anında
+            uzman yorumcuya iletilir. 1 token harcanır.
+          </p>
         </div>
       )}
     </div>
@@ -479,120 +220,280 @@ function Section3({ data, update }: { data: any; update: any }) {
 }
 
 // ============================================================
-// BÖLÜM 4: SAHNE ANALİZİ
+// ADIM 1: ZEMİN VE KOORDİNATLAR
 // ============================================================
-function Section4({ data, update }: { data: any; update: any }) {
-  const c = data.section4_content;
+function Step1({ data, update }: { data: DreamFormData; update: any }) {
+  const s = data.step1_ground;
+  return (
+    <div className="space-y-6">
+      <h2 className="font-display text-xl text-night-50 mb-4">Zemin ve Koordinatlar</h2>
+
+      {/* Zihinsel odak */}
+      <div>
+        <label className="label">
+          Dün veya yatmadan önce zihninizi çok meşgul eden, dert ettiğiniz veya izlediğiniz belirgin bir şey oldu mu?
+        </label>
+        <div className="flex gap-2 flex-wrap">
+          <ChipSelect
+            selected={s.mental_focus === "yogun"}
+            onClick={() => update({ mental_focus: "yogun" })}
+            label="Evet, çok yoğundu"
+          />
+          <ChipSelect
+            selected={s.mental_focus === "siradan"}
+            onClick={() => update({ mental_focus: "siradan" })}
+            label="Hayır, sıradan bir gündü"
+          />
+        </div>
+        {s.mental_focus === "yogun" && (
+          <input
+            type="text"
+            value={s.mental_focus_detail || ""}
+            onChange={(e) => update({ mental_focus_detail: e.target.value })}
+            placeholder="Kısaca yazabilirsiniz..."
+            className="input-field mt-3"
+          />
+        )}
+      </div>
+
+      <hr className="border-night-700" />
+
+      {/* Fiziksel durum */}
+      <div>
+        <label className="label">Yatmadan önceki fiziksel durumunuz nasıldı?</label>
+        <p className="text-xs text-night-400 mb-2">Birden fazla seçilebilir</p>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "cok_yorgun", label: "Çok Yorgun" },
+            { key: "agir_yemek", label: "Ağır Yemek Yedim" },
+            { key: "ilac_aldim", label: "İlaç Aldım" },
+            { key: "stresliydim", label: "Stresliydim" },
+            { key: "normal", label: "Normal" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={!!s.physical_state?.[opt.key as keyof typeof s.physical_state]}
+              onClick={() =>
+                update({
+                  physical_state: {
+                    ...s.physical_state,
+                    [opt.key]: !s.physical_state?.[opt.key as keyof typeof s.physical_state],
+                  },
+                })
+              }
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-night-700" />
+
+      {/* Uyku vakti */}
+      <div>
+        <label className="label">Rüyayı ne zaman gördünüz?</label>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "gece_ilk_yarisi", label: "Gecenin İlk Yarısı" },
+            { key: "teheccud", label: "Teheccüd Vakti" },
+            { key: "sabaha_karsi", label: "Sabaha Karşı" },
+            { key: "kaylule", label: "Gündüz (Kaylule)" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={s.dream_time === opt.key}
+              onClick={() => update({ dream_time: opt.key })}
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-night-700" />
+
+      {/* Yatış şekli */}
+      <div>
+        <label className="label">Uykuya geçiş haliniz nasıldı?</label>
+        <p className="text-xs text-night-400 mb-2">Birden fazla seçilebilir</p>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "abdestliydim", label: "Abdestliydim" },
+            { key: "duali_yattim", label: "Dualı Yattım" },
+            { key: "istihare_hacet", label: "İstihare/Hacet Niyetiyle" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={!!s.sleep_preparation?.[opt.key as keyof typeof s.sleep_preparation]}
+              onClick={() =>
+                update({
+                  sleep_preparation: {
+                    ...s.sleep_preparation,
+                    [opt.key]: !s.sleep_preparation?.[opt.key as keyof typeof s.sleep_preparation],
+                  },
+                })
+              }
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ADIM 2: SAHNE VE KALP PUSULASI
+// ============================================================
+function Step2({ data, update }: { data: DreamFormData; update: any }) {
+  const s = data.step2_scene;
+  return (
+    <div className="space-y-6">
+      <h2 className="font-display text-xl text-night-50 mb-4">Sahne ve Kalp Pusulası</h2>
+
+      {/* Gerçeklik */}
+      <div>
+        <label className="label">Rüyanın atmosferi nasıldı?</label>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "gercek_gibi", label: "Tamamen Gerçek Gibiydi" },
+            { key: "lucid", label: "Rüyada Olduğumu Biliyordum (Lucid)" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={s.reality_feel === opt.key}
+              onClick={() => update({ reality_feel: opt.key })}
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-night-700" />
+
+      {/* Mekan */}
+      <div>
+        <label className="label">Mekan neresiydi?</label>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "bilinen", label: "Bildiğim Bir Yer" },
+            { key: "mechul", label: "Tanımadığım/Meçhul Bir Yer" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={s.location === opt.key}
+              onClick={() => update({ location: opt.key })}
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-night-700" />
+
+      {/* Renkler */}
+      <div>
+        <label className="label">Rüyada baskın olan bir renk veya ışık var mıydı?</label>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "siyah_karanlik", label: "🌑 Siyah/Karanlık" },
+            { key: "beyaz_aydinlik", label: "⚪ Beyaz/Aydınlık" },
+            { key: "yesil", label: "🟢 Yeşil" },
+            { key: "kirmizi", label: "🔴 Kırmızı" },
+            { key: "yok", label: "Dikkat Çekici Bir Renk Yoktu" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={s.dominant_color === opt.key}
+              onClick={() => update({ dominant_color: opt.key })}
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-night-700" />
+
+      {/* KALP PUSULASI - EN KRİTİK */}
+      <div className="p-4 rounded-lg bg-gold-400/5 border border-gold-400/20">
+        <label className="label !text-gold-300">
+          🧭 Uyandığınız ilk saniye kalbinizde ne hissettiniz? *
+        </label>
+        <p className="text-xs text-night-400 mb-3">Bu en kritik veridir, dikkatle seçin</p>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "korku", label: "Korku" },
+            { key: "huzur", label: "Huzur" },
+            { key: "sevinc", label: "Sevinç" },
+            { key: "tiksinme", label: "Tiksinme" },
+            { key: "agirlik", label: "Ağırlık/Sıkıntı" },
+            { key: "ferahlik", label: "Ferahlık" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={s.first_emotion === opt.key}
+              onClick={() => update({ first_emotion: opt.key })}
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+
+      <hr className="border-night-700" />
+
+      {/* Fiziksel tepki */}
+      <div>
+        <label className="label">Nasıl uyandınız?</label>
+        <div className="flex gap-2 flex-wrap">
+          {[
+            { key: "sakin", label: "Sakin" },
+            { key: "terleyerek", label: "Terleyerek" },
+            { key: "nefes_nefese", label: "Nefes Nefese" },
+            { key: "aglayarak", label: "Ağlayarak" },
+            { key: "gulerek", label: "Gülerek" },
+          ].map((opt) => (
+            <ChipSelect
+              key={opt.key}
+              selected={s.physical_reaction === opt.key}
+              onClick={() => update({ physical_reaction: opt.key })}
+              label={opt.label}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ============================================================
+// ADIM 3: RÜYANIN METNİ
+// ============================================================
+function Step3({ data, update }: { data: DreamFormData; update: any }) {
+  const charCount = (data.step3_text.dream_narrative || "").length;
   return (
     <div className="space-y-4">
-      <h2 className="font-display text-xl text-night-50 mb-4">Rüyanın Dokusu ve İçeriği</h2>
+      <h2 className="font-display text-xl text-night-50 mb-2">Rüyanın Metni</h2>
+      <p className="text-night-300 text-sm mb-6">
+        Şimdi rüyanızı, aklınızda kalan nesneleri, kişileri ve olay örgüsünü detaylıca yazın.
+        Hikayeyi sansürsüzce aktarın.
+      </p>
 
       <div>
-        <label className="label">Rüyanın gerçeklik hissi nasıldı?</label>
-        <select
-          value={c.reality_feel || ""}
-          onChange={(e) => update("section4_content", { reality_feel: e.target.value })}
-          className="input-field"
-        >
-          <option value="">Seçiniz</option>
-          <option value="lucid">Rüyada olduğumu biliyordum (lucid)</option>
-          <option value="gercek_gibi">Tamamen gerçek gibiydi</option>
-          <option value="silik">Silik / parça parçaydı</option>
-        </select>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3">
-        <div>
-          <label className="label">Rüya mekanı</label>
-          <select
-            value={c.location?.known_or_unknown || ""}
-            onChange={(e) =>
-              update("section4_content", {
-                location: { ...c.location, known_or_unknown: e.target.value },
-              })
-            }
-            className="input-field"
-          >
-            <option value="">Seçiniz</option>
-            <option value="bilinen">Tanıdığım bir yer</option>
-            <option value="mechul">Meçhul / bilmediğim yer</option>
-            <option value="karisik">Karışık</option>
-          </select>
-        </div>
-        <div>
-          <label className="label">Mevsim</label>
-          <select
-            value={c.time_in_dream?.season || ""}
-            onChange={(e) =>
-              update("section4_content", {
-                time_in_dream: { ...c.time_in_dream, season: e.target.value },
-              })
-            }
-            className="input-field"
-          >
-            <option value="">Belirsiz</option>
-            <option value="ilkbahar">İlkbahar</option>
-            <option value="yaz">Yaz</option>
-            <option value="sonbahar">Sonbahar</option>
-            <option value="kis">Kış</option>
-          </select>
-        </div>
-      </div>
-
-      <div>
-        <label className="label">Mekan tasviri</label>
-        <input type="text"
-          value={c.location?.description || ""}
-          onChange={(e) =>
-            update("section4_content", {
-              location: { ...c.location, description: e.target.value },
-            })
-          }
-          placeholder="Çocukluk evim, bilinmeyen bir cami..."
-          className="input-field"
-        />
-      </div>
-
-      <div>
-        <label className="label">Baskın renkler ve ışık durumu</label>
-        <input type="text"
-          value={c.colors_and_light || ""}
-          onChange={(e) => update("section4_content", { colors_and_light: e.target.value })}
-          placeholder="Parlak güneş ışığı, baskın yeşil, karanlık..."
-          className="input-field"
-        />
-      </div>
-
-      <div>
-        <label className="label">En dikkat çeken nesne / hayvan / sembol</label>
-        <input type="text"
-          value={c.key_symbols?.join(", ") || ""}
-          onChange={(e) =>
-            update("section4_content", {
-              key_symbols: e.target.value.split(",").map((s) => s.trim()).filter(Boolean),
-            })
-          }
-          placeholder="Yeşil kuş, akan su, açık kapı (virgülle ayırınız)"
-          className="input-field"
-        />
-      </div>
-
-      <hr className="border-night-700 my-6" />
-
-      <div>
-        <label className="label">Rüyanızı detaylı anlatın *</label>
-        <p className="text-xs text-night-400 mb-2">
-          En az 50 karakter. Ne olduğunu, kimleri gördüğünüzü, neler yaşadığınızı yazın.
-        </p>
+        <label className="label">Rüya Detayı *</label>
+        <p className="text-xs text-night-400 mb-2">En az 50 karakter</p>
         <textarea
-          required rows={10}
-          value={c.dream_narrative || ""}
-          onChange={(e) => update("section4_content", { dream_narrative: e.target.value })}
+          required
+          rows={12}
+          value={data.step3_text.dream_narrative || ""}
+          onChange={(e) => update({ dream_narrative: e.target.value })}
           placeholder="Rüyamda kendimi... bulduğumu gördüm. Sonra..."
           className="input-field"
         />
-        <p className="text-xs text-night-400 mt-1 text-right">
-          {(c.dream_narrative || "").length} karakter
+        <p
+          className={`text-xs mt-1 text-right ${
+            charCount < 50 ? "text-night-400" : "text-green-400"
+          }`}
+        >
+          {charCount} karakter {charCount < 50 && `(en az 50)`}
         </p>
       </div>
     </div>
@@ -600,73 +501,28 @@ function Section4({ data, update }: { data: any; update: any }) {
 }
 
 // ============================================================
-// BÖLÜM 5: KALP PUSULASI
+// CHIP COMPONENT
 // ============================================================
-function Section5({ data, update }: { data: any; update: any }) {
-  const f = data.section5_feelings;
+function ChipSelect({
+  selected,
+  onClick,
+  label,
+}: {
+  selected: boolean;
+  onClick: () => void;
+  label: string;
+}) {
   return (
-    <div className="space-y-4">
-      <h2 className="font-display text-xl text-night-50 mb-4">Uyanış ve Hissiyat</h2>
-      <p className="text-night-300 text-sm mb-6">
-        Bu bölüm en kritik bölümdür — rüyanın manevi tadını ölçer.
-      </p>
-
-      <div>
-        <label className="label">Uyandığınız ilk saniyede kalbinizde ne hissettiniz? *</label>
-        <select
-          required
-          value={f.first_emotion}
-          onChange={(e) => update("section5_feelings", { first_emotion: e.target.value })}
-          className="input-field"
-        >
-          <option value="huzur">Huzur</option>
-          <option value="sevinc">Sevinç</option>
-          <option value="ferahlik">Ferahlık</option>
-          <option value="korku">Korku</option>
-          <option value="agirlik">Ağırlık / sıkıntı</option>
-          <option value="tiksinme">Tiksinme</option>
-          <option value="karmasik">Karmaşık / çelişkili</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="label">Fiziksel tepkiniz nasıldı?</label>
-        <select
-          value={f.physical_reaction || ""}
-          onChange={(e) => update("section5_feelings", { physical_reaction: e.target.value })}
-          className="input-field"
-        >
-          <option value="">Seçiniz</option>
-          <option value="sakin">Sakin uyandım</option>
-          <option value="terleyerek">Terleyerek</option>
-          <option value="aglayarak">Ağlayarak</option>
-          <option value="titreyerek">Titreyerek</option>
-          <option value="gulerek">Gülerek</option>
-          <option value="nefes_nefese">Nefes nefese</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="label">Rüya aklınızdan çıkıyor mu?</label>
-        <select
-          value={f.memorability || ""}
-          onChange={(e) => update("section5_feelings", { memorability: e.target.value })}
-          className="input-field"
-        >
-          <option value="">Seçiniz</option>
-          <option value="cikmaz">Aklımdan çıkmıyor</option>
-          <option value="arasi">Arası — bazı kısımları net</option>
-          <option value="silikleşiyor">Detaylar silikleşiyor</option>
-        </select>
-      </div>
-
-      <div className="mt-8 p-4 rounded-lg bg-gold-400/5 border border-gold-400/20">
-        <p className="text-sm text-night-200 leading-relaxed">
-          <strong className="text-gold-300">Son adım:</strong> "Rüyayı Gönder" butonuna
-          bastığınızda 1 token harcanır. Rüyanız demlenmeye bırakılırsa tokeniniz iade edilir.
-          Yorumunuz hazır olduğunda panelden görebileceksiniz.
-        </p>
-      </div>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all border ${
+        selected
+          ? "bg-gold-400/20 text-gold-200 border-gold-400/50"
+          : "bg-night-900/40 text-night-200 border-night-700 hover:border-night-500"
+      }`}
+    >
+      {label}
+    </button>
   );
 }

@@ -1,7 +1,7 @@
 // Supabase veritabanı tipleri
 // Bu dosya manuel — schema değişirse buradan da güncelle
 
-export type DreamStatus = "submitted" | "in_review" | "answered" | "marinating";
+export type DreamStatus = "journal" | "submitted" | "in_review" | "answered" | "marinating";
 export type OrderStatus = "pending" | "paid" | "failed" | "refunded" | "cancelled";
 export type TransactionType = "purchase" | "spend" | "refund" | "admin_grant" | "admin_revoke";
 

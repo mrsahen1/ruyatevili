@@ -70,73 +70,56 @@ export interface TokenTransaction {
   created_at: string;
 }
 
-// Rüya formu — 5 bölümlü anamnez
+// Rüya formu — Yeni 3 adımlı yapı
 export interface DreamFormData {
-  schema_version: "1.0";
+  schema_version: "2.0";
 
-  section1_profile: {
-    age: number;
-    gender: "erkek" | "kadin";
-    marital_status: "bekar" | "evli" | "dul" | "bosanmis";
-    has_marriage_intent?: boolean;
-    occupation: string;
-    mental_focus?: string;
-    spiritual_state?: {
-      worship_regularity?: "duzenli" | "gevsek" | "arayista" | "paylasmak_istemiyorum";
-      recent_sin_or_regret?: string;
-      recent_good_deed_or_prayer?: string;
-      spiritual_affiliation?: string;
+  // ADIM 1: ZEMİN VE KOORDİNATLAR
+  step1_ground: {
+    // Zihinsel odak (gündüz kalıntısı)
+    mental_focus?: "yogun" | "siradan";
+    mental_focus_detail?: string; // "yogun" seçilirse açılan kutu
+
+    // Fiziksel durum (çoklu seçim)
+    physical_state?: {
+      cok_yorgun?: boolean;
+      agir_yemek?: boolean;
+      ilac_aldim?: boolean;
+      stresliydim?: boolean;
+      normal?: boolean;
+    };
+
+    // Uyku vakti (tek seçim)
+    dream_time?: "gece_ilk_yarisi" | "teheccud" | "sabaha_karsi" | "kaylule";
+
+    // Yatış şekli (çoklu seçim)
+    sleep_preparation?: {
+      abdestliydim?: boolean;
+      duali_yattim?: boolean;
+      istihare_hacet?: boolean;
     };
   };
 
-  section2_daily_life?: {
-    day_residue?: string;
-    current_question_or_wish?: string;
-    health_state?: {
-      was_tired?: boolean;
-      was_sick?: boolean;
-      was_stressed?: boolean;
-      heavy_meal_before_sleep?: boolean;
-      current_medication?: string;
-    };
+  // ADIM 2: SAHNE VE KALP PUSULASI
+  step2_scene: {
+    // Gerçeklik (tek seçim)
+    reality_feel?: "gercek_gibi" | "lucid";
+
+    // Mekan (tek seçim)
+    location?: "bilinen" | "mechul";
+
+    // Renkler ve ışık (tek seçim)
+    dominant_color?: "siyah_karanlik" | "beyaz_aydinlik" | "yesil" | "kirmizi" | "yok";
+
+    // Kalp pusulası — En kritik (tek seçim)
+    first_emotion: "korku" | "huzur" | "sevinc" | "tiksinme" | "agirlik" | "ferahlik";
+
+    // Fiziksel tepki (tek seçim)
+    physical_reaction?: "sakin" | "terleyerek" | "nefes_nefese" | "aglayarak" | "gulerek";
   };
 
-  section3_timing?: {
-    dream_time?: "gece_ilk_yarisi" | "teheccud" | "sabah_ezanina_yakin" | "kaylule" | "bilmiyorum";
-    sleep_position?: {
-      had_ablution?: boolean;
-      prayed_before_sleep?: boolean;
-      body_position?: "sag" | "sol" | "sirtustu" | "yuzustu" | "hatirlamiyorum";
-    };
-    special_intention?: {
-      type?: "yok" | "istihare" | "hacet" | "yakaza";
-      intention_text?: string;
-    };
-  };
-
-  section4_content: {
-    reality_feel?: "lucid" | "gercek_gibi" | "silik";
-    location?: {
-      known_or_unknown?: "bilinen" | "mechul" | "karisik";
-      description?: string;
-    };
-    time_in_dream?: {
-      season?: "ilkbahar" | "yaz" | "sonbahar" | "kis" | "belirsiz";
-      time_of_day?: "gunduz" | "gece" | "safak" | "aksam" | "belirsiz";
-    };
-    colors_and_light?: string;
-    people?: Array<{
-      known: boolean;
-      relation?: string | null;
-      name_heard?: string | null;
-    }>;
-    key_symbols?: string[];
-    dream_narrative: string;
-  };
-
-  section5_feelings: {
-    first_emotion: "korku" | "huzur" | "sevinc" | "tiksinme" | "agirlik" | "ferahlik" | "karmasik";
-    physical_reaction?: "sakin" | "terleyerek" | "aglayarak" | "titreyerek" | "gulerek" | "nefes_nefese";
-    memorability?: "cikmaz" | "silikleşiyor" | "arasi";
+  // ADIM 3: RÜYA METNİ
+  step3_text: {
+    dream_narrative: string; // En az 50 karakter
   };
 }

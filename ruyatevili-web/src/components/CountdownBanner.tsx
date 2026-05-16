@@ -2,9 +2,12 @@
 
 import { useEffect, useState } from "react";
 
-// 🎯 KAMPANYA BİTİŞ TARİHİ — İstediğin zaman değiştir
-// Format: "YYYY-MM-DD HH:MM:SS"
-const CAMPAIGN_END_DATE = "2026-06-30T23:59:59";
+// Bunu CountdownBanner.tsx'in en üstündeki CAMPAIGN_END_DATE satırı ile değiştir.
+//
+// Bugün 15 Mayıs 2026 olduğu için 30 Mayıs 2026'ya ayarladım (15 gün).
+// İstersen tarihi değiştirebilirsin.
+
+const CAMPAIGN_END_DATE = "2026-05-30T23:59:59";
 
 export function CountdownBanner() {
   const [timeLeft, setTimeLeft] = useState<{

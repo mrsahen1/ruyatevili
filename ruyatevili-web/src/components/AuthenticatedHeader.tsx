@@ -18,12 +18,25 @@ export async function AuthenticatedHeader() {
   return (
     <header className="border-b border-night-700/50 bg-night-950/70 backdrop-blur-md sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
-        <Link href="/dashboard" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="ruyatevili" width={36} height={36} priority />
-          <span className="font-display text-lg text-night-50 hidden sm:inline">ruyatevili</span>
+        {/* LOGO — Ana sayfaya */}
+        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+          <Image src="/logo.png" alt="RUYATEVİLİ" width={36} height={36} priority />
+          <span className="font-display text-lg text-night-50 tracking-widest uppercase hidden sm:inline">
+            ruyatevili
+          </span>
         </Link>
 
-        <div className="flex items-center gap-3">
+        {/* SAĞ MENÜ */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Panelim (Dashboard) */}
+          <Link
+            href="/dashboard"
+            className="px-3 py-2 text-night-200 hover:text-gold-300 transition-colors text-sm font-medium"
+          >
+            Panelim
+          </Link>
+
+          {/* Token bakiyesi */}
           <Link
             href="/wallet"
             className="flex items-center gap-2 px-3 py-2 bg-night-800/60 hover:bg-night-700/60 border border-gold-400/20 rounded-lg transition-all"
@@ -36,21 +49,21 @@ export async function AuthenticatedHeader() {
           </Link>
 
           {profile?.is_admin && (
-  <>
-    <Link
-      href="/admin/dreams"
-      className="px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
-    >
-      Yönetim
-    </Link>
-    <Link
-      href="/admin/grant-tokens"
-      className="hidden sm:inline-flex px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
-    >
-      🪙 Token Ver
-    </Link>
-  </>
-)}
+            <>
+              <Link
+                href="/admin/dreams"
+                className="px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
+              >
+                Yönetim
+              </Link>
+              <Link
+                href="/admin/grant-tokens"
+                className="hidden sm:inline-flex px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
+              >
+                🪙 Token Ver
+              </Link>
+            </>
+          )}
 
           <SignOutButton />
         </div>

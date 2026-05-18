@@ -4,7 +4,7 @@ import Image from "next/image";
 export const metadata = {
   title: "Gizlilik Politikası | ruyatevili",
   description:
-    "Kişisel verilerinizin nasıl işlendiği, korunduğu ve kullanıldığı hakkında detaylı 1 bilgi.",
+    "Kişisel verilerinizin nasıl işlendiği, korunduğu ve kullanıldığı hakkında detaylı bilgi.",
 };
 
 export default function PrivacyPage() {

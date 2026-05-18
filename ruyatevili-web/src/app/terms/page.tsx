@@ -271,7 +271,7 @@ export default function TermsPage() {
             </h2>
             <p>
               Bu sözleşme, Türkiye Cumhuriyeti yasalarına tabidir. Doğabilecek
-              uyuşmazlıklarda Antalya Mahkemeleri ve İcra Daireleri yetkilidir.
+              uyuşmazlıklarda İstanbul Mahkemeleri ve İcra Daireleri yetkilidir.
             </p>
             <p>
               Tüketici uyuşmazlıkları için Tüketici Hakem Heyeti veya Tüketici

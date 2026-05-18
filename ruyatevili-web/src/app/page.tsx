@@ -87,13 +87,13 @@ export default async function HomePage() {
             ilham kırıntılarını
             <span className="absolute -bottom-2 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-gold-400/60 to-transparent animate-shimmer"></span>
           </em>
-          , ilimle gerçeğe dönüştürüyoruz
+          , ilimle gerçeğe dönüştürüyoruz inşa&apos;Allah
         </h1>
 
         <p className="text-lg md:text-xl text-night-200 max-w-2xl mx-auto mb-12 leading-relaxed">
           Doğru teşhis ve doğru bilgiyle rüyalarınızın dilini çözün. Detaylı analiz
           sistemimizle rüyanızın dokusunu ve içeriğini birlikte inceleyelim,
-          kalbinizin pusulasını beraber bulalım.
+          kalbinizin pusulasını beraber bulalım inşa&apos;Allah.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
@@ -283,7 +283,7 @@ export default async function HomePage() {
             Rüyanız Sizi Bekliyor
           </h2>
           <p className="text-night-300 mb-8">
-            Şimdi kayıt olun, klasik tevil ilmiyle rüyanızın mesajını keşfedin.
+            Şimdi kayıt olun, klasik tevil ilmiyle rüyanızın mesajını keşfedin inşa&apos;Allah.
           </p>
           <Link
             href="/auth/register"

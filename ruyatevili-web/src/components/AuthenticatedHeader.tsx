@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { SignOutButton } from "@/components/SignOutButton";
+import { NotificationBell } from "@/components/NotificationBell";
 import type { Profile } from "@/lib/types/database";
 
 export async function AuthenticatedHeader() {
@@ -47,6 +48,9 @@ export async function AuthenticatedHeader() {
             <span className="sm:inline">📓</span>
             <span className="hidden sm:inline ml-1">Günlük</span>
           </Link>
+
+          {/* Bildirimler 🔔 */}
+          <NotificationBell />
 
           {/* Token bakiyesi */}
           <Link

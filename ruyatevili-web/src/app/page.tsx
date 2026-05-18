@@ -30,7 +30,7 @@ export default async function HomePage() {
       {/* PARLAYAN IŞIK GEÇİŞİ */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gold-400/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
 
-            {/* ÜST NAVIGASYON */}
+      {/* ÜST NAVIGASYON — MOBİL UYUMLU */}
       <nav className="relative container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between z-10 gap-2">
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
           <Image
@@ -62,12 +62,12 @@ export default async function HomePage() {
       </nav>
 
       {/* GERİ SAYIM */}
-      <div className="container mx-auto px-6 mb-8 relative z-10">
+      <div className="container mx-auto px-4 sm:px-6 mb-8 relative z-10">
         <CountdownBanner />
       </div>
 
       {/* HERO */}
-      <section className="relative container mx-auto px-6 pt-12 pb-24 text-center animate-fade-in z-10">
+      <section className="relative container mx-auto px-4 sm:px-6 pt-12 pb-24 text-center animate-fade-in z-10">
         {/* HİLAL DEKORASYONU */}
         <div className="absolute top-0 right-12 hidden lg:block">
           <div className="text-9xl text-gold-400/10 animate-float">☾</div>
@@ -124,7 +124,7 @@ export default async function HomePage() {
       </section>
 
       {/* KANCA MESAJ — DÖNEN IŞIK ŞERİDİYLE */}
-      <section className="relative container mx-auto px-6 py-12 z-10">
+      <section className="relative container mx-auto px-4 sm:px-6 py-12 z-10">
         <div className="rotating-border-wrapper max-w-3xl mx-auto">
           <div className="rotating-border-inner bg-night-900 rounded-xl">
             <div className="card-elevated !bg-transparent !border-0 text-center !rounded-xl">
@@ -138,7 +138,7 @@ export default async function HomePage() {
       </section>
 
       {/* NASIL ÇALIŞIR */}
-      <section id="nasil-calisir" className="relative container mx-auto px-6 py-20 z-10">
+      <section id="nasil-calisir" className="relative container mx-auto px-4 sm:px-6 py-20 z-10">
         <h2 className="font-display text-4xl md:text-5xl text-center text-night-50 mb-4">
           Üç Basit Adım
         </h2>
@@ -191,7 +191,7 @@ export default async function HomePage() {
       </section>
 
       {/* PAKETLER */}
-      <section id="paketler" className="relative container mx-auto px-6 py-20 z-10">
+      <section id="paketler" className="relative container mx-auto px-4 sm:px-6 py-20 z-10">
         <div className="text-center mb-4">
           <span className="inline-block px-4 py-1 rounded-full bg-gold-400/20 text-gold-300 text-sm font-medium mb-4 animate-pulse-slow">
             🎉 Açılışa Özel %30 İndirim
@@ -206,7 +206,6 @@ export default async function HomePage() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
           {packages?.map((pkg: TokenPackage) => {
-            // %30 indirim için: indirimli fiyat / 0.7 = orijinal fiyat
             const originalPrice = Math.round(Number(pkg.price_try) / 0.7);
             return (
               <div
@@ -249,8 +248,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* OTORİTE */}
-      <section className="relative container mx-auto px-6 py-20 z-10">
+      {/* OTORİTE + SERTİFİKA */}
+      <section className="relative container mx-auto px-4 sm:px-6 py-20 z-10">
         <div className="card-elevated max-w-3xl mx-auto text-center relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-br from-gold-400/5 via-transparent to-gold-400/5 pointer-events-none"></div>
           <div className="relative">
@@ -289,7 +288,7 @@ export default async function HomePage() {
       </section>
 
       {/* SON CTA */}
-      <section className="relative container mx-auto px-6 py-20 z-10">
+      <section className="relative container mx-auto px-4 sm:px-6 py-20 z-10">
         <div className="max-w-2xl mx-auto text-center">
           <h2 className="font-display text-3xl md:text-4xl text-night-50 mb-4">
             Rüyanız Sizi Bekliyor
@@ -308,7 +307,7 @@ export default async function HomePage() {
 
       {/* FOOTER */}
       <footer className="relative border-t border-night-700 mt-20 z-10">
-        <div className="container mx-auto px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="container mx-auto px-4 sm:px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <Image src="/logo.png" alt="RUYATEVİLİ" width={32} height={32} />
             <span className="font-display text-night-50 tracking-widest uppercase">

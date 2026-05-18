@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 
-// Bunu CountdownBanner.tsx'in en üstündeki CAMPAIGN_END_DATE satırı ile değiştir.
-//
-// Bugün 15 Mayıs 2026 olduğu için 30 Mayıs 2026'ya ayarladım (15 gün).
-// İstersen tarihi değiştirebilirsin.
-
+// 🎯 KAMPANYA BİTİŞ TARİHİ
 const CAMPAIGN_END_DATE = "2026-05-30T23:59:59";
 
 export function CountdownBanner() {
@@ -48,7 +44,7 @@ export function CountdownBanner() {
       <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="text-center sm:text-left">
           <p className="text-gold-300 font-display text-lg">
-            🎉 Açılışa Özel %90 İndirim
+            🎉 Açılışa Özel %30 İndirim
           </p>
           <p className="text-night-200 text-sm mt-1">
             Kampanya sona erdiğinde fiyatlar normale dönecek

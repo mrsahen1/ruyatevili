@@ -176,7 +176,7 @@ export default async function AdminDreamDetailPage({
 
       {/* YORUM FORMU - sadece henüz cevaplanmamışsa */}
       {(dream.status === "submitted" || dream.status === "in_review") && (
-        <AdminDreamForm dreamId={dream.id} currentStatus={dream.status} />
+        <AdminDreamForm dream={dream} />
       )}
 
       {/* MEVCUT CEVAP - cevaplanmışsa göster */}

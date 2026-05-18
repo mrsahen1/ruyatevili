@@ -19,6 +19,64 @@ export function AdminDreamForm({ dream }: { dream: Dream }) {
 
   const isFinal = dream.status === "answered" || dream.status === "marinating";
 
+  // --------------------------------------------------------
+  // YENİ EKLENEN BÖLÜM: E-posta Gönderme Fonksiyonu
+  // --------------------------------------------------------
+  async function notifyUser(type: "answer" | "marinate") {
+    try {
+      const supabase = createClient();
+      
+      // 1. Kullanıcının e-posta adresini profiller tablosundan çek
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("email")
+        .eq("id", dream.user_id)
+        .single();
+
+      const userEmail = profile?.email;
+
+      // Eğer mail adresi bulunamazsa işlemi iptal et (hata fırlatma ki uygulama çökmesin)
+      if (!userEmail) {
+        console.warn("Kullanıcının e-posta adresi bulunamadı, mail gönderilmedi.");
+        return;
+      }
+
+      // 2. Mail içeriğini (Konu ve Gövde) hazırla
+      const subject = type === "answer" ? "Rüyanız Yorumlandı! 🌙" : "Rüyanız Demlenmeye Bırakıldı 🍵";
+      
+      const html = type === "answer"
+        ? `<div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+             <h2 style="color: #d4af37;">Rüyanız Yorumlandı! 🌙</h2>
+             <p>Merhaba,</p>
+             <p>Gönderdiğiniz rüya özenle incelendi ve yorumlandı. İşte rüyanızın tabiri:</p>
+             <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; border-left: 4px solid #d4af37; margin: 20px 0;">
+               <p style="white-space: pre-wrap; margin: 0;">${interpretation}</p>
+             </div>
+             <p>Daha fazla detay için Rüya Tevili uygulamasına giriş yapabilirsiniz.</p>
+           </div>`
+        : `<div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; line-height: 1.6;">
+             <h2 style="color: #6b7280;">Rüyanız Demlenmeye Bırakıldı 🍵</h2>
+             <p>Merhaba,</p>
+             <p>Gönderdiğiniz rüya, klasik kaynaklara göre henüz tabir edilebilmesi için zamanın olgunlaşmasını bekliyor.</p>
+             <div style="background: #f9f9f9; padding: 20px; border-radius: 8px; border-left: 4px solid #6b7280; margin: 20px 0;">
+               <p style="white-space: pre-wrap; margin: 0;">${marinatingMessage}</p>
+             </div>
+             <p>Kullanılan token hesabınıza iade edilmiştir.</p>
+           </div>`;
+
+      // 3. Bizim yeni kurduğumuz Vercel API'sine (postaneye) isteği gönder
+      await fetch("/api/send-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ to: userEmail, subject, html }),
+      });
+      
+    } catch (err) {
+      console.error("Mail gönderim motorunda hata oluştu:", err);
+    }
+  }
+  // --------------------------------------------------------
+
   async function startReview() {
     setSubmitting(true);
     const supabase = createClient();
@@ -55,8 +113,12 @@ export function AdminDreamForm({ dream }: { dream: Dream }) {
           admin_notes: adminNotes || null,
         })
         .eq("id", dream.id);
+        
       if (error) setError(error.message);
       else {
+        // YENİ EKLENTİ: Veritabanına başarıyla kaydedildikten sonra maili tetikle
+        await notifyUser("answer");
+        
         setSuccess(true);
         router.refresh();
       }
@@ -74,8 +136,12 @@ export function AdminDreamForm({ dream }: { dream: Dream }) {
           admin_notes: adminNotes || null,
         })
         .eq("id", dream.id);
+        
       if (error) setError(error.message);
       else {
+        // YENİ EKLENTİ: Veritabanına başarıyla kaydedildikten sonra maili tetikle
+        await notifyUser("marinate");
+        
         setSuccess(true);
         router.refresh();
       }
@@ -195,7 +261,7 @@ export function AdminDreamForm({ dream }: { dream: Dream }) {
       )}
       {success && (
         <div className="mt-4 p-3 rounded-lg bg-green-900/30 border border-green-700/40 text-green-200 text-sm">
-          Başarıyla kaydedildi.
+          Başarıyla kaydedildi ve e-posta gönderildi.
         </div>
       )}
 
@@ -205,7 +271,7 @@ export function AdminDreamForm({ dream }: { dream: Dream }) {
         className="btn-primary w-full mt-6"
       >
         {submitting
-          ? "Kaydediliyor..."
+          ? "İşleniyor..."
           : mode === "answer"
             ? "Yorumu Gönder"
             : "Demlenmeye Bırak (Token İade)"}

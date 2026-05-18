@@ -30,7 +30,7 @@ export default async function HomePage() {
       {/* PARLAYAN IŞIK GEÇİŞİ */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-gold-400/10 rounded-full blur-3xl pointer-events-none animate-pulse-slow"></div>
 
-      {/* ÜST NAVIGASYON — MOBİL UYUMLU */}
+      {/* ÜST NAVIGASYON */}
       <nav className="relative container mx-auto px-4 sm:px-6 py-4 sm:py-6 flex items-center justify-between z-10 gap-2">
         <Link href="/" className="flex items-center gap-2 sm:gap-3 group min-w-0">
           <Image
@@ -68,12 +68,10 @@ export default async function HomePage() {
 
       {/* HERO */}
       <section className="relative container mx-auto px-4 sm:px-6 pt-12 pb-24 text-center animate-fade-in z-10">
-        {/* HİLAL DEKORASYONU */}
         <div className="absolute top-0 right-12 hidden lg:block">
           <div className="text-9xl text-gold-400/10 animate-float">☾</div>
         </div>
 
-        {/* SERTİFİKA ROZETİ — DÖNEN IŞIK ŞERİDİYLE */}
         <div className="rotating-border-wrapper inline-block mb-8">
           <div className="rotating-border-inner px-6 py-2 bg-night-900 rounded-full">
             <span className="inline-flex items-center gap-2 text-gold-300 text-sm">
@@ -98,7 +96,6 @@ export default async function HomePage() {
           kalbinizin pusulasını beraber bulalım.
         </p>
 
-        {/* CTA BUTONLARI — DÖNEN IŞIK ŞERİDİYLE SARILI */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
           <div className="rotating-border-wrapper">
             <div className="rotating-border-inner bg-night-950 rounded-lg">
@@ -115,7 +112,6 @@ export default async function HomePage() {
           </Link>
         </div>
 
-        {/* HEDIYE ROZETI */}
         <div className="mt-8 inline-block">
           <p className="text-sm text-gold-300/80">
             🎁 Kayıt olunca <span className="font-semibold">1 ücretsiz token</span> hediye!
@@ -123,7 +119,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* KANCA MESAJ — DÖNEN IŞIK ŞERİDİYLE */}
+      {/* KANCA MESAJ */}
       <section className="relative container mx-auto px-4 sm:px-6 py-12 z-10">
         <div className="rotating-border-wrapper max-w-3xl mx-auto">
           <div className="rotating-border-inner bg-night-900 rounded-xl">
@@ -268,7 +264,6 @@ export default async function HomePage() {
               &quot;Rüya ve Ta&apos;bir/Te&apos;vil İlmi&quot; eğitim sertifikası mevcuttur.
             </p>
 
-            {/* SERTİFİKA - DÖNEN IŞIK ŞERİDİYLE */}
             <div className="rotating-border-wrapper inline-block">
               <div className="rotating-border-inner bg-night-900 rounded-xl p-2">
                 <Image
@@ -307,16 +302,42 @@ export default async function HomePage() {
 
       {/* FOOTER */}
       <footer className="relative border-t border-night-700 mt-20 z-10">
-        <div className="container mx-auto px-4 sm:px-6 py-12 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.png" alt="RUYATEVİLİ" width={32} height={32} />
-            <span className="font-display text-night-50 tracking-widest uppercase">
-              ruyatevili
-            </span>
+        <div className="container mx-auto px-4 sm:px-6 py-12">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-2">
+              <Image src="/logo.png" alt="RUYATEVİLİ" width={32} height={32} />
+              <span className="font-display text-night-50 tracking-widest uppercase">
+                ruyatevili
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-4 text-sm">
+              <Link
+                href="/privacy"
+                className="text-night-300 hover:text-gold-300 transition-colors"
+              >
+                Gizlilik Politikası
+              </Link>
+              <span className="text-night-700">·</span>
+              <Link
+                href="/terms"
+                className="text-night-300 hover:text-gold-300 transition-colors"
+              >
+                Kullanım Şartları
+              </Link>
+              <span className="text-night-700">·</span>
+              <a
+                href="mailto:janysarry84@gmail.com"
+                className="text-night-300 hover:text-gold-300 transition-colors"
+              >
+                İletişim
+              </a>
+            </div>
           </div>
-          <p className="text-sm text-night-400">
-            © {new Date().getFullYear()} RUYATEVİLİ · Tüm hakları saklıdır
-          </p>
+          <div className="text-center">
+            <p className="text-sm text-night-400">
+              © {new Date().getFullYear()} RUYATEVİLİ · Tüm hakları saklıdır
+            </p>
+          </div>
         </div>
       </footer>
     </main>

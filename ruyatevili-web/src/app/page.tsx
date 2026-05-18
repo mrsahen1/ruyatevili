@@ -111,12 +111,6 @@ export default async function HomePage() {
             Nasıl Çalışır? ↓
           </Link>
         </div>
-
-        <div className="mt-8 inline-block">
-          <p className="text-sm text-gold-300/80">
-            🎁 Kayıt olunca <span className="font-semibold">1 ücretsiz token</span> hediye!
-          </p>
-        </div>
       </section>
 
       {/* KANCA MESAJ */}
@@ -289,13 +283,13 @@ export default async function HomePage() {
             Rüyanız Sizi Bekliyor
           </h2>
           <p className="text-night-300 mb-8">
-            Şimdi kayıt olun, 1 ücretsiz token hediyemizle ilk rüyanızı yorumlatın.
+            Şimdi kayıt olun, klasik tevil ilmiyle rüyanızın mesajını keşfedin.
           </p>
           <Link
             href="/auth/register"
             className="btn-primary text-lg px-10 py-4 inline-block"
           >
-            🎁 Ücretsiz Başla
+            ✨ Hemen Başla
           </Link>
         </div>
       </section>

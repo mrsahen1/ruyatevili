@@ -11,7 +11,27 @@ export function NotificationBell() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Kullanıcının admin olup olmadığını öğren
+  async function loadAdminStatus() {
+    try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", user.id)
+        .single<{ is_admin: boolean }>();
+
+      setIsAdmin(profile?.is_admin === true);
+    } catch (e) {
+      console.warn("Admin status fetch error:", e);
+    }
+  }
 
   // Bildirimleri çek
   async function loadNotifications() {
@@ -38,6 +58,7 @@ export function NotificationBell() {
 
   // İlk yükleme + her 30 saniyede bir yenile
   useEffect(() => {
+    loadAdminStatus();
     loadNotifications();
     const interval = setInterval(loadNotifications, 30000);
     return () => clearInterval(interval);
@@ -81,7 +102,12 @@ export function NotificationBell() {
     setOpen(false);
 
     if (n.related_dream_id) {
-      router.push(`/dream/${n.related_dream_id}`);
+      // Admin için admin paneline, kullanıcı için kendi sayfasına
+      if (isAdmin) {
+        router.push(`/admin/dreams/${n.related_dream_id}`);
+      } else {
+        router.push(`/dream/${n.related_dream_id}`);
+      }
     }
   }
 
@@ -164,11 +190,11 @@ export function NotificationBell() {
           {notifications.length > 0 && (
             <div className="px-4 py-2 border-t border-night-700 bg-night-900/80">
               <Link
-                href="/dashboard"
+                href={isAdmin ? "/admin/dreams" : "/dashboard"}
                 onClick={() => setOpen(false)}
                 className="text-xs text-night-300 hover:text-gold-300 transition-colors"
               >
-                Panele dön →
+                {isAdmin ? "Yönetim paneli →" : "Panele dön →"}
               </Link>
             </div>
           )}
@@ -178,7 +204,7 @@ export function NotificationBell() {
   );
 }
 
-// Tarih formatlama: "5 dakika önce", "2 saat önce", "3 gün önce"
+// Tarih formatlama
 function timeAgo(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();

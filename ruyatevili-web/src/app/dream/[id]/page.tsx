@@ -1,14 +1,14 @@
 import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import type { Dream } from "@/lib/types/database";
+import { SendForAnalysisButton } from "@/components/SendForAnalysisButton";
+import type { Dream, Profile } from "@/lib/types/database";
 
 export default async function DreamDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/auth/login");
@@ -16,18 +16,27 @@ export default async function DreamDetailPage({
   const { data: dream } = await supabase
     .from("dreams")
     .select("*")
-    .eq("id", id)
+    .eq("id", params.id)
+    .eq("user_id", user.id)
     .single<Dream>();
 
   if (!dream) notFound();
 
-  const statusInfo = {
-    submitted: { label: "Beklemede", icon: "⏳", color: "yellow" },
-    in_review: { label: "İnceleniyor", icon: "🔍", color: "yellow" },
-    answered: { label: "Cevaplandı", icon: "✅", color: "green" },
-    marinating: { label: "Demlenmeye Bırakıldı", icon: "🍵", color: "gray" },
-  }[dream.status];
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("id", user.id)
+    .single<Profile>();
 
+  const statusInfo = {
+    journal:    { label: "Günlükte", icon: "⏳", color: "gray" },
+    submitted:  { label: "Beklemede", icon: "🕊️", color: "yellow" },
+    in_review:  { label: "İnceleniyor", icon: "🔍", color: "yellow" },
+    answered:   { label: "Cevaplandı", icon: "✅", color: "green" },
+    marinating: { label: "Demlenmeye Bırakıldı", icon: "🍵", color: "gray" },
+  };
+
+  const info = statusInfo[dream.status];
   const submittedDate = new Date(dream.submitted_at).toLocaleString("tr-TR", {
     day: "2-digit",
     month: "long",
@@ -36,87 +45,106 @@ export default async function DreamDetailPage({
     minute: "2-digit",
   });
 
+  const tokenBalance = profile?.token_balance ?? 0;
+  const quotaFull = (profile?.active_dream_count ?? 0) >= (profile?.dream_quota ?? 5);
+
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-fade-in">
-      <Link href="/dashboard" className="btn-ghost inline-flex">
-        ← Panele Dön
-      </Link>
-
-      {/* Durum kartı */}
-      <div className="card">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">{statusInfo.icon}</span>
-              <span className={`badge badge-${statusInfo.color}`}>
-                {statusInfo.label}
-              </span>
-              {dream.token_refunded && (
-                <span className="badge badge-gray">Token İade Edildi</span>
-              )}
-            </div>
-            <p className="text-sm text-night-300">Gönderildi: {submittedDate}</p>
-          </div>
+      {/* Üst */}
+      <div className="flex items-start justify-between flex-wrap gap-2">
+        <Link href="/dashboard" className="btn-ghost text-sm">
+          ← Panele Dön
+        </Link>
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{info.icon}</span>
+          <span className={`badge badge-${info.color}`}>{info.label}</span>
         </div>
       </div>
 
-      {/* Rüya metni */}
-      <div className="card">
-        <h2 className="font-display text-xl text-gold-300 mb-3">Rüyanız</h2>
-        <p className="text-night-100 whitespace-pre-wrap leading-relaxed">
+      {/* Rüya Metni */}
+      <div className="card-elevated">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+          <h1 className="font-display text-2xl text-night-50">Rüyam</h1>
+          <span className="text-sm text-night-400">{submittedDate}</span>
+        </div>
+        <p className="text-night-100 leading-relaxed whitespace-pre-wrap">
           {dream.dream_text}
         </p>
       </div>
 
-      {/* Cevap */}
-      {dream.status === "answered" && dream.interpretation && (
-        <div className="card-elevated">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">📜</span>
-            <h2 className="font-display text-2xl text-gold-300">Yorum</h2>
-          </div>
-          <div className="prose prose-invert max-w-none">
-            <p className="text-night-50 whitespace-pre-wrap leading-relaxed text-lg">
-              {dream.interpretation}
+      {/* JOURNAL durumu — Analize Gönder butonu */}
+      {dream.status === "journal" && (
+        <div className="card-elevated border-gold-400/40 text-center">
+          <p className="text-5xl mb-3">🕊️</p>
+          <h2 className="font-display text-xl text-night-50 mb-2">
+            Bu rüya günlüğünüzde askıda
+          </h2>
+          <p className="text-night-200 leading-relaxed mb-6">
+            Detaylar tazeyken analize göndermek isterseniz, aşağıdan 1 token harcayarak
+            uzman yorumcuya iletebilirsiniz.
+          </p>
+          <SendForAnalysisButton
+            dreamId={dream.id}
+            hasTokens={tokenBalance >= 1}
+            quotaFull={quotaFull}
+          />
+          {tokenBalance < 1 && (
+            <p className="text-xs text-night-400 mt-3">
+              Yetersiz token bakiyesi. <Link href="/wallet" className="text-gold-300 underline">Token al</Link>.
             </p>
-          </div>
-          {dream.answered_at && (
-            <p className="text-xs text-night-400 mt-6 text-right">
-              Cevaplandı: {new Date(dream.answered_at).toLocaleString("tr-TR")}
+          )}
+          {quotaFull && (
+            <p className="text-xs text-night-400 mt-3">
+              Rüya kotanız dolu. Mevcut analizlerinizi bekleyin.
             </p>
           )}
         </div>
       )}
 
-      {/* Demlenme mesajı */}
-      {dream.status === "marinating" && dream.marinating_message && (
-        <div className="card border-gold-400/30">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-2xl">🍵</span>
-            <h2 className="font-display text-xl text-gold-300">Demlenmeye Bırakıldı</h2>
-          </div>
-          <p className="text-night-100 whitespace-pre-wrap leading-relaxed mb-4">
-            {dream.marinating_message}
-          </p>
-          <div className="p-3 rounded-lg bg-green-900/20 border border-green-700/30 text-green-200 text-sm">
-            <strong>Bilgilendirme:</strong> Bu rüya için harcadığınız 1 token cüzdanınıza
-            iade edildi.
+      {/* Yorumlama */}
+      {dream.status === "answered" && dream.interpretation && (
+        <div className="card-elevated border-gold-400/30">
+          <h2 className="font-display text-2xl text-gold-300 mb-4 flex items-center gap-2">
+            📜 Yorum
+          </h2>
+          <div className="prose prose-invert max-w-none">
+            <p className="text-night-100 leading-relaxed whitespace-pre-wrap">
+              {dream.interpretation}
+            </p>
           </div>
         </div>
       )}
 
-      {/* Beklemede mesajı */}
+      {/* Demlenmeye bırakıldı */}
+      {dream.status === "marinating" && (
+        <div className="card border-yellow-700/40 bg-yellow-900/10">
+          <h2 className="font-display text-xl text-yellow-200 mb-3 flex items-center gap-2">
+            🍵 Rüyanız Demlenmeye Bırakıldı
+          </h2>
+          {dream.marinating_message && (
+            <p className="text-night-200 leading-relaxed mb-4 whitespace-pre-wrap">
+              {dream.marinating_message}
+            </p>
+          )}
+          <p className="text-sm text-night-300">
+            Bu rüya için tokeniniz iade edildi. Yeni rüyalarınızı bekliyoruz.
+          </p>
+        </div>
+      )}
+
+      {/* Beklemede / İnceleniyor */}
       {(dream.status === "submitted" || dream.status === "in_review") && (
         <div className="card text-center py-8">
-          <p className="text-5xl mb-3">🌙</p>
-          <p className="font-display text-xl text-night-50 mb-2">
-            {dream.status === "in_review"
-              ? "Rüyanız inceleniyor"
-              : "Rüyanız yorum bekliyor"}
-          </p>
-          <p className="text-night-300 max-w-md mx-auto">
-            Yorumunuz hazır olduğunda burada görünecek ve size bildirim göndereceğiz.
-            Bu süreç klasik kaynakların özenle incelenmesi için zaman alabilir.
+          <p className="text-4xl mb-3">{info.icon}</p>
+          <h2 className="font-display text-xl text-night-50 mb-2">
+            {dream.status === "submitted"
+              ? "Rüyanız sırada"
+              : "Rüyanız inceleniyor"}
+          </h2>
+          <p className="text-night-300">
+            {dream.status === "submitted"
+              ? "Yorumcumuz en kısa sürede inceleyecek. Yorumunuz hazır olduğunda burada görünecek."
+              : "Yorumcumuz rüyanızı inceliyor. Yakında cevap hazır olacak."}
           </p>
         </div>
       )}

@@ -28,15 +28,17 @@ export default async function DashboardPage() {
   const quota = profile?.dream_quota ?? 5;
   const quotaPercent = (activeCount / quota) * 100;
   const quotaFull = activeCount >= quota;
-  const noTokens = tokenBalance < 1;
-  const canSubmit = !quotaFull && !noTokens;
 
   const firstName = profile?.full_name?.split(" ")[0] || "";
   const hasNoDreams = !dreams || dreams.length === 0;
 
+  // Günlükteki (askıda) rüyalar
+  const journalDreams = (dreams ?? []).filter((d: Dream) => d.status === "journal");
+  const submittedDreams = (dreams ?? []).filter((d: Dream) => d.status !== "journal");
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
-      {/* GERİ SAYIM BANNERI (her zaman göster - kampanya sürerken) */}
+      {/* GERİ SAYIM BANNERI */}
       <CountdownBanner />
 
       {/* KARŞILAMA */}
@@ -47,29 +49,40 @@ export default async function DashboardPage() {
         <p className="text-night-300">Rüya kontrol paneliniz</p>
       </div>
 
-      {/* SOSYAL KANIT (Sadece yeterli veri varsa) */}
+      {/* SOSYAL KANIT */}
       <SiteStats />
 
-      {/* TOKEN=0 İSE ACİLİYET MESAJI ÖNE ÇIK */}
-      {noTokens && hasNoDreams && (
-        <div className="card-elevated border-gold-400/40 text-center py-8">
+      {/* BÜYÜK CTA — Hep göster ama mesajı duruma göre değişsin */}
+      <div className="card-elevated text-center py-8 relative overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gold-400/5 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="relative">
           <p className="text-5xl mb-4">🌙</p>
-          <h2 className="font-display text-2xl text-night-50 mb-2">
-            İlk rüyanı yorumlatmaya hazırsın
-          </h2>
-          <p className="text-night-200 leading-relaxed mb-6 max-w-md mx-auto">
-            Açılışa özel <span className="text-gold-300 font-bold">%30 indirimle</span>{" "}
-sadece <span className="text-gold-300 font-bold">350 ₺</span>&apos;ye başla.
-            Klasik tabir ilmiyle rüyanın mesajını öğren.
+          <p className="font-display text-2xl text-gold-300 mb-2 italic">
+            &quot;Detaylar silikleşmeden rüyanızı yazın!&quot;
           </p>
-          <Link href="/wallet" className="btn-primary text-lg px-8 py-4 inline-block">
-            🪙 Hemen Token Al
-          </Link>
-          <p className="text-xs text-night-400 mt-3">
-            Demlenmeye bırakılan rüyalar için tokeniniz iade edilir
+          <p className="text-night-200 mb-6 max-w-md mx-auto">
+            Uyanır uyanmaz hatırladıklarınızı kaydedin.{" "}
+            <strong>Günlüğe Kaydet</strong> demek token harcamaz —{" "}
+            <strong>Analize Gönder</strong> 1 token.
           </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Link
+              href="/dream/new"
+              className="btn-primary text-lg px-8 py-4"
+            >
+              ✍️ Yeni Rüya Yaz
+            </Link>
+            {journalDreams.length > 0 && (
+              <Link
+                href="/dream/journal"
+                className="btn-secondary text-lg px-6 py-4"
+              >
+                📓 Günlüğüm ({journalDreams.length})
+              </Link>
+            )}
+          </div>
         </div>
-      )}
+      </div>
 
       {/* CÜZDAN + KOTA KARTLARI */}
       <div className="grid md:grid-cols-2 gap-4">
@@ -94,9 +107,10 @@ sadece <span className="text-gold-300 font-bold">350 ₺</span>&apos;ye başla.
         <div className="card">
           <div className="flex items-start justify-between mb-2">
             <div>
-              <p className="text-sm text-night-300">Rüya Kotası</p>
+              <p className="text-sm text-night-300">Analiz Kotası</p>
               <p className="font-display text-4xl text-night-50 mt-1">
-                {activeCount}<span className="text-night-400 text-2xl">/{quota}</span>
+                {activeCount}
+                <span className="text-night-400 text-2xl">/{quota}</span>
               </p>
               <p className="text-sm text-night-200 mt-1">
                 {quotaFull
@@ -115,62 +129,40 @@ sadece <span className="text-gold-300 font-bold">350 ₺</span>&apos;ye başla.
         </div>
       </div>
 
-      {/* YENİ RÜYA BUTONU */}
-      <div className="card text-center py-8">
-        {canSubmit ? (
-          <>
-            <p className="font-display text-xl text-gold-300 mb-2 italic">
-              &quot;Detaylar silikleşmeden rüyanızı yazın!&quot;
+      {/* GÜNLÜĞE BAĞLANTI - eğer askıda rüya yoksa */}
+      {journalDreams.length === 0 && (
+        <Link
+          href="/dream/journal"
+          className="card hover:border-gold-400/40 transition-all flex items-center gap-4 group"
+        >
+          <span className="text-3xl">📓</span>
+          <div className="flex-1">
+            <p className="font-display text-lg text-night-50">Rüya Günlüğüm</p>
+            <p className="text-sm text-night-300">
+              Askıdaki rüyalarınızı yönetin
             </p>
-            <p className="text-night-200 mb-4">
-              Uyandığınız o ilk saniye kalbinizde ne hissettiniz? Duygularınızı hemen aktarın.
-            </p>
-            <Link href="/dream/new" className="btn-primary text-lg px-8 py-4">
-              ✍️ Yeni Rüya Gönder
-            </Link>
-            <p className="text-xs text-night-400 mt-3">
-              Rüya gönderdiğinizde 1 token harcanır
-            </p>
-          </>
-        ) : noTokens ? (
-          // (Üstte zaten daha büyük bir aciliyet mesajı gösterdik, burada daha küçük)
-          !hasNoDreams && (
-            <>
-              <p className="text-night-200 mb-4">
-                Yeni rüya göndermek için token almalısınız
-              </p>
-              <Link href="/wallet" className="btn-primary text-lg px-8 py-4 inline-block">
-                🪙 Token Satın Al
-              </Link>
-            </>
-          )
-        ) : (
-          <>
-            <p className="text-night-200 mb-4">
-              Rüya kotanız dolu. Mevcut rüyalarınız yanıtlanana kadar bekleyin.
-            </p>
-            <button disabled className="btn-primary text-lg px-8 py-4 opacity-50 cursor-not-allowed">
-              Kota Dolu
-            </button>
-          </>
-        )}
-      </div>
+          </div>
+          <span className="text-night-400 group-hover:text-gold-300">→</span>
+        </Link>
+      )}
 
-      {/* RÜYA KAYITLARI */}
+      {/* GÖNDERİLEN RÜYALAR */}
       <div>
-        <h2 className="font-display text-2xl text-night-50 mb-4">Rüya Kayıtlarım</h2>
+        <h2 className="font-display text-2xl text-night-50 mb-4">
+          🕊️ Analize Gönderilen Rüyalarım
+        </h2>
 
-        {hasNoDreams ? (
+        {submittedDreams.length === 0 ? (
           <div className="card text-center py-12">
             <p className="text-4xl mb-3">🌙</p>
-            <p className="text-night-200">Henüz rüya göndermediniz.</p>
+            <p className="text-night-200">Henüz analize gönderdiğiniz rüya yok.</p>
             <p className="text-night-400 text-sm mt-2">
-              İlk rüyanızı gönderdiğinizde burada listelenir.
+              Günlüğünüzdeki rüyaları analize gönderdiğinizde burada listelenir.
             </p>
           </div>
         ) : (
           <div className="space-y-3">
-            {dreams.map((dream: Dream) => (
+            {submittedDreams.map((dream: Dream) => (
               <DreamListItem key={dream.id} dream={dream} />
             ))}
           </div>
@@ -182,9 +174,10 @@ sadece <span className="text-gold-300 font-bold">350 ₺</span>&apos;ye başla.
 
 function DreamListItem({ dream }: { dream: Dream }) {
   const statusConfig: Record<string, { label: string; badge: string; icon: string }> = {
-    submitted: { label: "Beklemede", badge: "badge-yellow", icon: "⏳" },
-    in_review: { label: "İnceleniyor", badge: "badge-yellow", icon: "🔍" },
-    answered: { label: "Cevaplandı", badge: "badge-green", icon: "✅" },
+    journal:    { label: "Günlükte", badge: "badge-gray", icon: "⏳" },
+    submitted:  { label: "Beklemede", badge: "badge-yellow", icon: "🕊️" },
+    in_review:  { label: "İnceleniyor", badge: "badge-yellow", icon: "🔍" },
+    answered:   { label: "Cevaplandı", badge: "badge-green", icon: "✅" },
     marinating: { label: "Demlenmeye Bırakıldı", badge: "badge-gray", icon: "🍵" },
   };
 
@@ -215,7 +208,9 @@ function DreamListItem({ dream }: { dream: Dream }) {
             {dream.dream_text.length > 200 ? "..." : ""}
           </p>
         </div>
-        <span className="text-night-400 group-hover:text-gold-300 transition-colors">→</span>
+        <span className="text-night-400 group-hover:text-gold-300 transition-colors">
+          →
+        </span>
       </div>
     </Link>
   );

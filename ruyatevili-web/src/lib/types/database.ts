@@ -45,7 +45,7 @@ export interface Order {
 export interface Dream {
   id: string;
   user_id: string;
-  form_data: DreamFormData;
+  form_data: DreamFormData | any; // 'any' eski 5 adımlı formları da kabul etsin
   dream_text: string;
   status: DreamStatus;
   interpretation: string | null;
@@ -70,17 +70,15 @@ export interface TokenTransaction {
   created_at: string;
 }
 
-// Rüya formu — Yeni 3 adımlı yapı
+// Rüya formu — Yeni 3 adımlı yapı (v2.0)
 export interface DreamFormData {
   schema_version: "2.0";
 
   // ADIM 1: ZEMİN VE KOORDİNATLAR
   step1_ground: {
-    // Zihinsel odak (gündüz kalıntısı)
     mental_focus?: "yogun" | "siradan";
-    mental_focus_detail?: string; // "yogun" seçilirse açılan kutu
+    mental_focus_detail?: string;
 
-    // Fiziksel durum (çoklu seçim)
     physical_state?: {
       cok_yorgun?: boolean;
       agir_yemek?: boolean;
@@ -89,10 +87,8 @@ export interface DreamFormData {
       normal?: boolean;
     };
 
-    // Uyku vakti (tek seçim)
     dream_time?: "gece_ilk_yarisi" | "teheccud" | "sabaha_karsi" | "kaylule";
 
-    // Yatış şekli (çoklu seçim)
     sleep_preparation?: {
       abdestliydim?: boolean;
       duali_yattim?: boolean;
@@ -102,24 +98,15 @@ export interface DreamFormData {
 
   // ADIM 2: SAHNE VE KALP PUSULASI
   step2_scene: {
-    // Gerçeklik (tek seçim)
     reality_feel?: "gercek_gibi" | "lucid";
-
-    // Mekan (tek seçim)
     location?: "bilinen" | "mechul";
-
-    // Renkler ve ışık (tek seçim)
     dominant_color?: "siyah_karanlik" | "beyaz_aydinlik" | "yesil" | "kirmizi" | "yok";
-
-    // Kalp pusulası — En kritik (tek seçim)
     first_emotion: "korku" | "huzur" | "sevinc" | "tiksinme" | "agirlik" | "ferahlik";
-
-    // Fiziksel tepki (tek seçim)
     physical_reaction?: "sakin" | "terleyerek" | "nefes_nefese" | "aglayarak" | "gulerek";
   };
 
   // ADIM 3: RÜYA METNİ
   step3_text: {
-    dream_narrative: string; // En az 50 karakter
+    dream_narrative: string;
   };
 }

@@ -17,29 +17,41 @@ export async function AuthenticatedHeader() {
 
   return (
     <header className="border-b border-night-700/50 bg-night-950/70 backdrop-blur-md sticky top-0 z-50">
-      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="container mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-2">
         {/* LOGO — Ana sayfaya */}
-        <Link href="/" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+        <Link
+          href="/"
+          className="flex items-center gap-2 hover:opacity-80 transition-opacity min-w-0 flex-shrink-0"
+        >
           <Image src="/logo.png" alt="RUYATEVİLİ" width={36} height={36} priority />
-          <span className="font-display text-lg text-night-50 tracking-widest uppercase hidden sm:inline">
+          <span className="font-display text-lg text-night-50 tracking-widest uppercase hidden md:inline">
             ruyatevili
           </span>
         </Link>
 
         {/* SAĞ MENÜ */}
-        <div className="flex items-center gap-2 sm:gap-3">
-          {/* Panelim (Dashboard) */}
+        <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+          {/* Panelim */}
           <Link
             href="/dashboard"
-            className="px-3 py-2 text-night-200 hover:text-gold-300 transition-colors text-sm font-medium"
+            className="px-2 sm:px-3 py-2 text-night-200 hover:text-gold-300 transition-colors text-sm font-medium"
           >
             Panelim
+          </Link>
+
+          {/* Günlüğüm */}
+          <Link
+            href="/dream/journal"
+            className="px-2 sm:px-3 py-2 text-night-200 hover:text-gold-300 transition-colors text-sm font-medium"
+          >
+            <span className="sm:inline">📓</span>
+            <span className="hidden sm:inline ml-1">Günlük</span>
           </Link>
 
           {/* Token bakiyesi */}
           <Link
             href="/wallet"
-            className="flex items-center gap-2 px-3 py-2 bg-night-800/60 hover:bg-night-700/60 border border-gold-400/20 rounded-lg transition-all"
+            className="flex items-center gap-2 px-2 sm:px-3 py-2 bg-night-800/60 hover:bg-night-700/60 border border-gold-400/20 rounded-lg transition-all"
           >
             <span className="text-lg">🪙</span>
             <span className="text-night-50 font-medium">
@@ -52,7 +64,7 @@ export async function AuthenticatedHeader() {
             <>
               <Link
                 href="/admin/dreams"
-                className="px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
+                className="px-2 sm:px-3 py-2 bg-gold-400/10 hover:bg-gold-400/20 border border-gold-400/30 rounded-lg text-gold-300 text-sm transition-all"
               >
                 Yönetim
               </Link>

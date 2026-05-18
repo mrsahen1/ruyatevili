@@ -1,193 +1,329 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import type { Dream } from "@/lib/types/database";
 import { AdminDreamForm } from "@/components/AdminDreamForm";
+import type { Dream, Profile } from "@/lib/types/database";
 
-export default async function AdminDreamDetail({
+export default async function AdminDreamDetailPage({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: { id: string };
 }) {
-  const { id } = await params;
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/auth/login");
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single<Pick<Profile, "is_admin">>();
+  if (!profile?.is_admin) redirect("/dashboard");
 
   const { data: dream } = await supabase
     .from("dreams")
     .select("*")
-    .eq("id", id)
+    .eq("id", params.id)
     .single<Dream>();
-
   if (!dream) notFound();
 
-  const formData = dream.form_data as any;
-  const submittedDate = new Date(dream.submitted_at).toLocaleString("tr-TR");
+  const { data: dreamUser } = await supabase
+    .from("profiles")
+    .select("full_name, phone")
+    .eq("id", dream.user_id)
+    .single<Pick<Profile, "full_name" | "phone">>();
+
+  const formData = (dream.form_data || {}) as any;
+  const schemaVersion = formData.schema_version || "1.0";
+  const isV2 = schemaVersion === "2.0";
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
-      <Link href="/admin/dreams" className="btn-ghost inline-flex">
-        ← Listeye Dön
-      </Link>
-
-      {/* Kullanıcı bilgileri */}
-      <div className="card">
-        <h2 className="font-display text-xl text-gold-300 mb-4">Kullanıcı Profili</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          <Info label="Yaş" value={formData?.section1_profile?.age} />
-          <Info label="Cinsiyet" value={formData?.section1_profile?.gender} />
-          <Info label="Medeni Durum" value={formData?.section1_profile?.marital_status} />
-          <Info label="Meslek" value={formData?.section1_profile?.occupation} />
-          <Info label="Zihinsel Odak" value={formData?.section1_profile?.mental_focus} />
-          <Info
-            label="İbadet Durumu"
-            value={formData?.section1_profile?.spiritual_state?.worship_regularity}
-          />
+      <div className="flex items-center justify-between flex-wrap gap-2">
+        <Link href="/admin/dreams" className="btn-ghost text-sm">
+          ← Listeye Dön
+        </Link>
+        <div className="flex items-center gap-2 text-sm text-night-300">
+          <span>Şema: v{schemaVersion}</span>
         </div>
-        {formData?.section1_profile?.spiritual_state?.recent_sin_or_regret && (
-          <div className="mt-4 p-3 rounded-lg bg-night-900/40 border border-night-700">
-            <p className="text-xs text-night-400 mb-1">Vicdani Yük</p>
-            <p className="text-night-100 text-sm">
-              {formData.section1_profile.spiritual_state.recent_sin_or_regret}
-            </p>
-          </div>
-        )}
-        {formData?.section1_profile?.spiritual_state?.recent_good_deed_or_prayer && (
-          <div className="mt-2 p-3 rounded-lg bg-night-900/40 border border-night-700">
-            <p className="text-xs text-night-400 mb-1">Manevi İyilik</p>
-            <p className="text-night-100 text-sm">
-              {formData.section1_profile.spiritual_state.recent_good_deed_or_prayer}
-            </p>
-          </div>
-        )}
       </div>
 
-      {/* Günlük yaşantı */}
-      <div className="card">
-        <h2 className="font-display text-xl text-gold-300 mb-4">Günlük Yaşantı</h2>
-        <div className="space-y-3 text-sm">
-          {formData?.section2_daily_life?.day_residue && (
-            <Info label="Gündüz Kalıntısı" value={formData.section2_daily_life.day_residue} block />
-          )}
-          {formData?.section2_daily_life?.current_question_or_wish && (
-            <Info
-              label="Cevap Aradığı Soru"
-              value={formData.section2_daily_life.current_question_or_wish}
-              block
+      {/* YENİ 3 ADIMLI FORM (v2.0) */}
+      {isV2 && (
+        <>
+          {/* ADIM 1: ZEMİN VE KOORDİNATLAR */}
+          <Section title="📍 Zemin ve Koordinatlar (Uyku Öncesi)">
+            <DataRow
+              label="Zihinsel Odak (Gündüz Kalıntısı)"
+              value={
+                formData.step1_ground?.mental_focus === "yogun"
+                  ? `Çok yoğundu${formData.step1_ground?.mental_focus_detail ? ` — ${formData.step1_ground.mental_focus_detail}` : ""}`
+                  : formData.step1_ground?.mental_focus === "siradan"
+                    ? "Sıradan bir gündü"
+                    : null
+              }
             />
-          )}
-          <div className="flex flex-wrap gap-2 mt-3">
-            {formData?.section2_daily_life?.health_state?.was_tired && (
-              <span className="badge badge-gray">Yorgun</span>
-            )}
-            {formData?.section2_daily_life?.health_state?.was_sick && (
-              <span className="badge badge-gray">Hasta</span>
-            )}
-            {formData?.section2_daily_life?.health_state?.was_stressed && (
-              <span className="badge badge-gray">Stresli</span>
-            )}
-            {formData?.section2_daily_life?.health_state?.heavy_meal_before_sleep && (
-              <span className="badge badge-gray">Ağır Yemek</span>
-            )}
-          </div>
-        </div>
-      </div>
+            <DataRow
+              label="Fiziksel Durum"
+              value={formatPhysicalState(formData.step1_ground?.physical_state)}
+            />
+            <DataRow
+              label="Uyku Vakti"
+              value={formatDreamTime(formData.step1_ground?.dream_time)}
+            />
+            <DataRow
+              label="Yatış Şekli ve Niyet"
+              value={formatSleepPrep(formData.step1_ground?.sleep_preparation)}
+            />
+          </Section>
 
-      {/* Teknik koordinatlar */}
-      <div className="card">
-        <h2 className="font-display text-xl text-gold-300 mb-4">Teknik Koordinatlar</h2>
-        <div className="grid grid-cols-2 gap-3 text-sm">
-          <Info label="Vakit" value={formData?.section3_timing?.dream_time} />
-          <Info label="Yatış" value={formData?.section3_timing?.sleep_position?.body_position} />
-          <Info
-            label="Abdest"
-            value={formData?.section3_timing?.sleep_position?.had_ablution ? "Vardı" : "Yoktu"}
-          />
-          <Info
-            label="Niyet"
-            value={formData?.section3_timing?.special_intention?.type}
-          />
-        </div>
-        {formData?.section3_timing?.special_intention?.intention_text && (
-          <div className="mt-3 p-3 rounded-lg bg-night-900/40 border border-night-700">
-            <p className="text-xs text-night-400 mb-1">Niyet Detayı</p>
-            <p className="text-night-100 text-sm">
-              {formData.section3_timing.special_intention.intention_text}
-            </p>
-          </div>
-        )}
-      </div>
+          {/* ADIM 2: SAHNE VE KALP PUSULASI */}
+          <Section title="🎭 Sahne ve Kalp Pusulası">
+            <DataRow
+              label="Gerçeklik Hissi"
+              value={
+                formData.step2_scene?.reality_feel === "gercek_gibi"
+                  ? "Tamamen gerçek gibiydi"
+                  : formData.step2_scene?.reality_feel === "lucid"
+                    ? "Rüyada olduğunu biliyordu (Lucid)"
+                    : null
+              }
+            />
+            <DataRow
+              label="Mekan"
+              value={
+                formData.step2_scene?.location === "bilinen"
+                  ? "Bildiği bir yer"
+                  : formData.step2_scene?.location === "mechul"
+                    ? "Tanımadığı / Meçhul"
+                    : null
+              }
+            />
+            <DataRow
+              label="Baskın Renk / Işık"
+              value={formatColor(formData.step2_scene?.dominant_color)}
+            />
+            <DataRow
+              label="🧭 İlk Hissedilen Duygu (KRİTİK)"
+              value={formatEmotion(formData.step2_scene?.first_emotion)}
+              highlight
+            />
+            <DataRow
+              label="Fiziksel Tepki (Uyanış Anı)"
+              value={formatReaction(formData.step2_scene?.physical_reaction)}
+            />
+          </Section>
+        </>
+      )}
 
-      {/* Rüya metni + Sahne detayları */}
-      <div className="card-elevated">
-        <h2 className="font-display text-2xl text-gold-300 mb-4">🌙 Rüya</h2>
+      {/* ESKİ 5 ADIMLI FORM (v1.0) — geriye dönük uyumluluk */}
+      {!isV2 && (
+        <>
+          <Section title="👤 Kullanıcı Profili">
+            <DataRow label="Ad Soyad" value={dreamUser?.full_name} />
+            <DataRow label="Yaş" value={formData.user_profile?.age?.toString()} />
+            <DataRow label="Cinsiyet" value={formData.user_profile?.gender} />
+            <DataRow label="Medeni Hal" value={formData.user_profile?.marital_status} />
+            <DataRow label="Meslek" value={formData.user_profile?.occupation} />
+          </Section>
 
-        <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-          <Info label="Gerçeklik Hissi" value={formData?.section4_content?.reality_feel} />
-          <Info label="Mevsim" value={formData?.section4_content?.time_in_dream?.season} />
-          <Info
-            label="Mekan"
-            value={formData?.section4_content?.location?.description}
-          />
-          <Info label="Renkler" value={formData?.section4_content?.colors_and_light} />
-        </div>
+          <Section title="📅 Günlük Yaşantı">
+            <DataRow label="Genel Hava" value={formData.daily_life?.recent_mood} />
+            <DataRow label="Önemli Olaylar" value={formData.daily_life?.recent_events} />
+            <DataRow
+              label="Beklenti / Endişe"
+              value={formData.daily_life?.current_concerns}
+            />
+          </Section>
 
-        {formData?.section4_content?.key_symbols?.length > 0 && (
-          <div className="mb-4">
-            <p className="text-xs text-night-400 mb-2">Anahtar Semboller</p>
-            <div className="flex flex-wrap gap-2">
-              {formData.section4_content.key_symbols.map((sym: string, i: number) => (
-                <span key={i} className="badge bg-gold-400/10 text-gold-200 border border-gold-400/20">
-                  {sym}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
+          <Section title="🌙 Teknik Koordinatlar (Eski Form)">
+            <DataRow
+              label="Abdest"
+              value={formData.technical?.had_ablution ? "Vardı" : "Yoktu"}
+            />
+            <DataRow
+              label="Uyumadan Önce Okunan"
+              value={formData.technical?.pre_sleep_reading}
+            />
+            <DataRow label="Uyku Saati" value={formData.technical?.sleep_time} />
+          </Section>
+        </>
+      )}
 
-        <div className="mt-4 p-4 rounded-lg bg-night-900/40 border border-night-700">
+      {/* RÜYA METNİ */}
+      <Section title="🌙 Rüya">
+        <div className="bg-night-900/60 border border-gold-400/20 rounded-lg p-4">
           <p className="text-xs text-night-400 mb-2">Rüya Anlatımı</p>
-          <p className="text-night-50 whitespace-pre-wrap leading-relaxed">
+          <p className="text-night-100 leading-relaxed whitespace-pre-wrap font-medium">
             {dream.dream_text}
           </p>
         </div>
-      </div>
-
-      {/* Kalp pusulası */}
-      <div className="card">
-        <h2 className="font-display text-xl text-gold-300 mb-4">Kalp Pusulası</h2>
-        <div className="grid grid-cols-3 gap-3 text-sm">
-          <Info label="İlk Duygu" value={formData?.section5_feelings?.first_emotion} />
-          <Info label="Fiziksel Tepki" value={formData?.section5_feelings?.physical_reaction} />
-          <Info label="Unutulmazlık" value={formData?.section5_feelings?.memorability} />
-        </div>
-      </div>
+      </Section>
 
       {/* META */}
-      <div className="card">
-        <div className="flex items-center justify-between text-sm">
-          <div>
-            <p className="text-night-400 text-xs">Gönderim</p>
-            <p className="text-night-100">{submittedDate}</p>
-          </div>
-          <div>
-            <p className="text-night-400 text-xs">Durum</p>
-            <p className="text-night-100">{dream.status}</p>
-          </div>
+      <div className="card flex items-center justify-between flex-wrap gap-3 text-sm">
+        <div>
+          <p className="text-night-400 text-xs">Gönderim</p>
+          <p className="text-night-100 font-medium">
+            {new Date(dream.submitted_at).toLocaleString("tr-TR")}
+          </p>
+        </div>
+        <div className="text-right">
+          <p className="text-night-400 text-xs">Durum</p>
+          <p className="text-gold-300 font-medium">{dream.status}</p>
         </div>
       </div>
 
-      {/* CEVAP FORMU */}
-      <AdminDreamForm dream={dream} />
+      {/* YORUM FORMU - sadece henüz cevaplanmamışsa */}
+      {(dream.status === "submitted" || dream.status === "in_review") && (
+        <AdminDreamForm dreamId={dream.id} currentStatus={dream.status} />
+      )}
+
+      {/* MEVCUT CEVAP - cevaplanmışsa göster */}
+      {dream.status === "answered" && dream.interpretation && (
+        <Section title="📜 Mevcut Yorum">
+          <p className="text-night-100 leading-relaxed whitespace-pre-wrap">
+            {dream.interpretation}
+          </p>
+        </Section>
+      )}
+
+      {dream.status === "marinating" && dream.marinating_message && (
+        <Section title="🍵 Demlenmeye Bırakma Notu">
+          <p className="text-night-100 leading-relaxed whitespace-pre-wrap">
+            {dream.marinating_message}
+          </p>
+        </Section>
+      )}
     </div>
   );
 }
 
-function Info({ label, value, block }: { label: string; value: any; block?: boolean }) {
-  if (!value) return null;
+// ============================================================
+// COMPONENTS
+// ============================================================
+
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className={block ? "" : ""}>
-      <p className="text-xs text-night-400">{label}</p>
-      <p className="text-night-100">{String(value)}</p>
+    <div className="card">
+      <h2 className="font-display text-xl text-night-50 mb-4">{title}</h2>
+      <div className="space-y-3">{children}</div>
     </div>
   );
+}
+
+function DataRow({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string | null | undefined;
+  highlight?: boolean;
+}) {
+  if (!value || value === "—" || value.trim() === "") {
+    return (
+      <div className="flex items-start gap-3 flex-wrap">
+        <span className="text-sm text-night-400 min-w-[180px]">{label}</span>
+        <span className="text-sm text-night-500 italic">— belirtilmemiş</span>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={`flex items-start gap-3 flex-wrap ${
+        highlight ? "bg-gold-400/10 border border-gold-400/30 rounded-lg p-3" : ""
+      }`}
+    >
+      <span className="text-sm text-night-300 min-w-[180px]">{label}</span>
+      <span
+        className={`text-sm font-medium flex-1 ${
+          highlight ? "text-gold-200" : "text-night-50"
+        }`}
+      >
+        {value}
+      </span>
+    </div>
+  );
+}
+
+// ============================================================
+// FORMAT YARDIMCILARI (Yeni 3 adımlı form)
+// ============================================================
+
+function formatPhysicalState(state: any): string | null {
+  if (!state) return null;
+  const labels: Record<string, string> = {
+    cok_yorgun: "Çok Yorgun",
+    agir_yemek: "Ağır Yemek Yedim",
+    ilac_aldim: "İlaç Aldım",
+    stresliydim: "Stresliydim",
+    normal: "Normal",
+  };
+  const selected = Object.keys(labels)
+    .filter((k) => state[k] === true)
+    .map((k) => labels[k]);
+  return selected.length > 0 ? selected.join(", ") : null;
+}
+
+function formatDreamTime(time: string | undefined): string | null {
+  if (!time) return null;
+  const map: Record<string, string> = {
+    gece_ilk_yarisi: "Gecenin İlk Yarısı",
+    teheccud: "Teheccüd Vakti",
+    sabaha_karsi: "Sabaha Karşı",
+    kaylule: "Gündüz (Kaylule)",
+  };
+  return map[time] || time;
+}
+
+function formatSleepPrep(prep: any): string | null {
+  if (!prep) return null;
+  const labels: Record<string, string> = {
+    abdestliydim: "Abdestliydi",
+    duali_yattim: "Dualı Yattı",
+    istihare_hacet: "İstihare/Hacet Niyetiyle",
+  };
+  const selected = Object.keys(labels)
+    .filter((k) => prep[k] === true)
+    .map((k) => labels[k]);
+  return selected.length > 0 ? selected.join(", ") : null;
+}
+
+function formatColor(color: string | undefined): string | null {
+  if (!color) return null;
+  const map: Record<string, string> = {
+    siyah_karanlik: "🌑 Siyah / Karanlık",
+    beyaz_aydinlik: "⚪ Beyaz / Aydınlık",
+    yesil: "🟢 Yeşil",
+    kirmizi: "🔴 Kırmızı",
+    yok: "Dikkat çekici bir renk yoktu",
+  };
+  return map[color] || color;
+}
+
+function formatEmotion(emotion: string | undefined): string | null {
+  if (!emotion) return null;
+  const map: Record<string, string> = {
+    korku: "😨 Korku",
+    huzur: "😌 Huzur",
+    sevinc: "😊 Sevinç",
+    tiksinme: "🤢 Tiksinme",
+    agirlik: "😔 Ağırlık / Sıkıntı",
+    ferahlik: "✨ Ferahlık",
+  };
+  return map[emotion] || emotion;
+}
+
+function formatReaction(reaction: string | undefined): string | null {
+  if (!reaction) return null;
+  const map: Record<string, string> = {
+    sakin: "Sakin",
+    terleyerek: "Terleyerek",
+    nefes_nefese: "Nefes Nefese",
+    aglayarak: "Ağlayarak",
+    gulerek: "Gülerek",
+  };
+  return map[reaction] || reaction;
 }

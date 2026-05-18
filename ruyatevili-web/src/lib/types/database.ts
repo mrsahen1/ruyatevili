@@ -1,9 +1,9 @@
 // Supabase veritabanı tipleri
-// Bu dosya manuel — schema değişirse buradan da güncelle
 
 export type DreamStatus = "journal" | "submitted" | "in_review" | "answered" | "marinating";
 export type OrderStatus = "pending" | "paid" | "failed" | "refunded" | "cancelled";
 export type TransactionType = "purchase" | "spend" | "refund" | "admin_grant" | "admin_revoke";
+export type NotificationType = "dream_answered" | "dream_marinating" | "token_granted" | "welcome" | "system";
 
 export interface Profile {
   id: string;
@@ -45,7 +45,7 @@ export interface Order {
 export interface Dream {
   id: string;
   user_id: string;
-  form_data: DreamFormData | any; // 'any' eski 5 adımlı formları da kabul etsin
+  form_data: DreamFormData | any;
   dream_text: string;
   status: DreamStatus;
   interpretation: string | null;
@@ -70,11 +70,21 @@ export interface TokenTransaction {
   created_at: string;
 }
 
+export interface Notification {
+  id: string;
+  user_id: string;
+  type: NotificationType;
+  title: string;
+  message: string | null;
+  related_dream_id: string | null;
+  is_read: boolean;
+  created_at: string;
+}
+
 // Rüya formu — Yeni 3 adımlı yapı (v2.0)
 export interface DreamFormData {
   schema_version: "2.0";
 
-  // ADIM 1: ZEMİN VE KOORDİNATLAR
   step1_ground: {
     mental_focus?: "yogun" | "siradan";
     mental_focus_detail?: string;
@@ -96,7 +106,6 @@ export interface DreamFormData {
     };
   };
 
-  // ADIM 2: SAHNE VE KALP PUSULASI
   step2_scene: {
     reality_feel?: "gercek_gibi" | "lucid";
     location?: "bilinen" | "mechul";
@@ -105,7 +114,6 @@ export interface DreamFormData {
     physical_reaction?: "sakin" | "terleyerek" | "nefes_nefese" | "aglayarak" | "gulerek";
   };
 
-  // ADIM 3: RÜYA METNİ
   step3_text: {
     dream_narrative: string;
   };

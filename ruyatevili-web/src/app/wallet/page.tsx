@@ -1,5 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { WalletPurchaseFlow } from "@/components/WalletPurchaseFlow";
+import { CountdownBanner } from "@/components/CountdownBanner";
 import type { Profile, TokenPackage, TokenTransaction } from "@/lib/types/database";
 
 export default async function WalletPage() {
@@ -26,85 +28,49 @@ export default async function WalletPage() {
     .order("created_at", { ascending: false })
     .limit(20);
 
+  const userEmail = user.email || "";
+  const tokenBalance = profile?.token_balance ?? 0;
+
   return (
-    <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <CountdownBanner />
+
+      {/* BAŞLIK */}
       <div>
-        <h1 className="font-display text-3xl text-night-50">Cüzdanım</h1>
-        <p className="text-night-300">Token bakiyenizi yönetin ve geçmiş işlemlerinizi görün</p>
+        <h1 className="font-display text-3xl md:text-4xl text-night-50 mb-1">
+          Token Cüzdanı
+        </h1>
+        <p className="text-night-300">Mevcut bakiyenizi yönetin ve yeni token alın</p>
       </div>
 
-      {/* Bakiye */}
-      <div className="card-elevated text-center py-8">
+      {/* MEVCUT BAKİYE */}
+      <div className="card-elevated text-center">
         <p className="text-sm text-night-300 mb-2">Mevcut Bakiye</p>
-        <p className="font-display text-6xl text-gold-300">{profile?.token_balance ?? 0}</p>
-        <p className="text-night-200 mt-2">Token</p>
+        <p className="font-display text-6xl text-gold-300 mb-1">{tokenBalance}</p>
+        <p className="text-sm text-night-200">Token Kullanılabilir</p>
       </div>
 
-      {/* İndirim banner */}
-      <div className="bg-gradient-to-r from-gold-500/20 via-gold-400/30 to-gold-500/20 border border-gold-400/40 rounded-2xl px-6 py-3 text-center">
-        <p className="text-gold-100">
-          🎉 <span className="font-display text-lg">Açılışa Özel</span> · Tüm paketlerde
-          <span className="text-gold-300 font-bold mx-1">%30 İNDİRİM</span>
-        </p>
-      </div>
+      {/* PAKETLER + SATIN ALMA AKIŞI - Client Component */}
+      <WalletPurchaseFlow
+        packages={(packages || []) as TokenPackage[]}
+        userEmail={userEmail}
+      />
 
-      {/* Paketler */}
+      {/* İŞLEM GEÇMİŞİ */}
       <div>
-        <h2 className="font-display text-2xl text-night-50 mb-4">Token Paketleri</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {packages?.map((pkg: TokenPackage) => {
-            const originalPrice = Math.round(Number(pkg.price_try) / 0.7);
-            return (
-              <div
-                key={pkg.id}
-                className={`relative ${pkg.is_featured ? "card-elevated" : "card"}`}
-              >
-                {pkg.is_featured && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-gold-400 text-night-950 text-xs font-medium rounded-full">
-                    En Avantajlı
-                  </div>
-                )}
-                <h3 className="font-display text-xl text-night-50 mb-3">{pkg.name}</h3>
-                <div className="mb-4">
-                  <p className="text-xs text-night-400 line-through">
-                    {originalPrice.toLocaleString("tr-TR")} ₺
-                  </p>
-                  <span className="font-display text-3xl text-gold-300">
-                    {Number(pkg.price_try).toLocaleString("tr-TR")}
-                  </span>
-                  <span className="text-night-300 ml-1">₺</span>
-                  <p className="text-xs text-gold-400 mt-1 font-medium">%30 İNDİRİM</p>
-                </div>
-                <p className="text-sm text-night-200 mb-4">
-                  {pkg.token_count} rüya hakkı
-                </p>
-                <PurchaseButton shopierLink={pkg.shopier_link} featured={pkg.is_featured} />
-              </div>
-            );
-          })}
-        </div>
+        <h2 className="font-display text-2xl text-night-50 mb-4">
+          📋 İşlem Geçmişi
+        </h2>
 
-        <div className="mt-6 p-4 rounded-lg bg-yellow-900/20 border border-yellow-700/30">
-          <p className="text-yellow-200 text-sm">
-            <strong>💳 Ödeme Süreci:</strong> &quot;Satın Al&quot; butonuna bastığınızda
-            Shopier&apos;in güvenli ödeme sayfasına yönlendirileceksiniz. Ödemeniz
-            tamamlandıktan sonra tokenleriniz <strong>maksimum 24 saat içinde</strong>
-            hesabınıza yüklenecektir. Acil durumlarda iletişime geçebilirsiniz.
-          </p>
-        </div>
-      </div>
-
-      {/* İşlem geçmişi */}
-      <div>
-        <h2 className="font-display text-2xl text-night-50 mb-4">İşlem Geçmişi</h2>
         {!transactions || transactions.length === 0 ? (
-          <div className="card text-center py-8">
-            <p className="text-night-300">Henüz işlem geçmişi yok</p>
+          <div className="card text-center py-12">
+            <p className="text-4xl mb-3">📋</p>
+            <p className="text-night-200">Henüz işlem bulunmuyor.</p>
           </div>
         ) : (
-          <div className="card divide-y divide-night-700">
+          <div className="space-y-2">
             {transactions.map((tx: TokenTransaction) => (
-              <TransactionRow key={tx.id} tx={tx} />
+              <TransactionItem key={tx.id} tx={tx} />
             ))}
           </div>
         )}
@@ -113,39 +79,16 @@ export default async function WalletPage() {
   );
 }
 
-function PurchaseButton({
-  shopierLink,
-  featured,
-}: {
-  shopierLink: string | null;
-  featured: boolean;
-}) {
-  if (!shopierLink) {
-    return (
-      <button
-        disabled
-        className={`${featured ? "btn-primary" : "btn-secondary"} w-full text-sm opacity-50 cursor-not-allowed`}
-        title="Ödeme linki henüz tanımlanmadı"
-      >
-        Yakında
-      </button>
-    );
-  }
+function TransactionItem({ tx }: { tx: TokenTransaction }) {
+  const typeConfig: Record<string, { label: string; icon: string; color: string }> = {
+    purchase: { label: "Satın Alma", icon: "🛒", color: "text-green-300" },
+    spend: { label: "Harcama", icon: "✍️", color: "text-night-200" },
+    refund: { label: "İade", icon: "↩️", color: "text-blue-300" },
+    admin_grant: { label: "Admin Yüklemesi", icon: "🎁", color: "text-gold-300" },
+    admin_revoke: { label: "Admin İptali", icon: "🚫", color: "text-red-300" },
+  };
 
-  return (
-    <a
-      href={shopierLink}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`${featured ? "btn-primary" : "btn-secondary"} w-full text-sm text-center block`}
-    >
-      Satın Al
-    </a>
-  );
-}
-
-function TransactionRow({ tx }: { tx: TokenTransaction }) {
-  const isPositive = tx.amount > 0;
+  const config = typeConfig[tx.type] || typeConfig.spend;
   const date = new Date(tx.created_at).toLocaleString("tr-TR", {
     day: "2-digit",
     month: "short",
@@ -154,27 +97,21 @@ function TransactionRow({ tx }: { tx: TokenTransaction }) {
     minute: "2-digit",
   });
 
-  const typeLabels: Record<string, string> = {
-    purchase: "Satın Alma",
-    spend: "Rüya Gönderimi",
-    refund: "İade",
-    admin_grant: "Hediye Token",
-    admin_revoke: "İptal",
-  };
-
   return (
-    <div className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
-      <div>
-        <p className="text-night-100 font-medium">{typeLabels[tx.type]}</p>
-        <p className="text-xs text-night-400">
-          {tx.description} · {date}
-        </p>
-      </div>
-      <div className="text-right">
-        <p className={`font-display text-xl ${isPositive ? "text-green-400" : "text-red-400"}`}>
-          {isPositive ? "+" : ""}{tx.amount}
-        </p>
-        <p className="text-xs text-night-400">Kalan: {tx.balance_after}</p>
+    <div className="card flex items-start gap-4">
+      <span className="text-2xl">{config.icon}</span>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <p className={`text-sm font-medium ${config.color}`}>{config.label}</p>
+          <p className={`font-display text-lg ${tx.amount > 0 ? "text-green-300" : "text-night-300"}`}>
+            {tx.amount > 0 ? "+" : ""}
+            {tx.amount}
+          </p>
+        </div>
+        {tx.description && (
+          <p className="text-xs text-night-300 mt-1">{tx.description}</p>
+        )}
+        <p className="text-xs text-night-400 mt-1">{date}</p>
       </div>
     </div>
   );

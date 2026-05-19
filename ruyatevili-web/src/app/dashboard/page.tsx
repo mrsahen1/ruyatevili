@@ -2,7 +2,6 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { CountdownBanner } from "@/components/CountdownBanner";
-import { SiteStats } from "@/components/SiteStats";
 import type { Profile, Dream } from "@/lib/types/database";
 
 export default async function DashboardPage() {
@@ -30,7 +29,6 @@ export default async function DashboardPage() {
   const quotaFull = activeCount >= quota;
 
   const firstName = profile?.full_name?.split(" ")[0] || "";
-  const hasNoDreams = !dreams || dreams.length === 0;
 
   // Günlükteki (askıda) rüyalar
   const journalDreams = (dreams ?? []).filter((d: Dream) => d.status === "journal");
@@ -49,10 +47,7 @@ export default async function DashboardPage() {
         <p className="text-night-300">Rüya kontrol paneliniz</p>
       </div>
 
-      {/* SOSYAL KANIT */}
-      <SiteStats />
-
-      {/* BÜYÜK CTA — Hep göster ama mesajı duruma göre değişsin */}
+      {/* BÜYÜK CTA */}
       <div className="card-elevated text-center py-8 relative overflow-hidden">
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[300px] h-[300px] bg-gold-400/5 rounded-full blur-3xl pointer-events-none"></div>
         <div className="relative">

@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import type { TokenPackage } from "@/lib/types/database";
 
 interface Props {
@@ -198,22 +197,6 @@ export function WalletPurchaseFlow({ packages, userEmail }: Props) {
                     desc="Tokenleriniz 24 saat içinde hesabınıza yüklenecektir"
                   />
                 </div>
-              </div>
-
-              {/* Uyarı */}
-              <div className="card bg-red-900/20 border-red-700/40">
-                <p className="text-sm text-red-200 leading-relaxed">
-                  <strong>⚠️ Önemli:</strong> Farklı bir mail adresi kullanırsanız
-                  veya sipariş notuna mail adresinizi yazmazsanız, tokenleriniz
-                  hesabınıza yüklenemeyebilir. Bu durumda{" "}
-                  <a
-                    href="mailto:janysarry84@gmail.com"
-                    className="text-gold-300 underline"
-                  >
-                    janysarry84@gmail.com
-                  </a>{" "}
-                  adresine yazın.
-                </p>
               </div>
             </div>
 
